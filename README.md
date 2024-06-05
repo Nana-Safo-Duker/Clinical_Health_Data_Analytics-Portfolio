@@ -52,6 +52,22 @@ A comprehensive, interactive web dashboard for analyzing and visualizing differe
 
 ## 🚀 Quick Start
 
+### Option 0: Streamlit Cloud (Recommended - No Installation!)
+
+🌐 **Deploy instantly to Streamlit Cloud:**
+
+1. Go to https://share.streamlit.io/
+2. Sign in with GitHub
+3. Select repository: `Nana-Safo-Duker/Differential-Gene-Expression-Dashboard`
+4. Set main file: `app/dashboard.py`
+5. Click "Deploy!"
+
+Your dashboard will be live at: `https://[your-app].streamlit.app/`
+
+📖 **Full deployment guide:** See [STREAMLIT_CLOUD_DEPLOY.md](STREAMLIT_CLOUD_DEPLOY.md)
+
+---
+
 ### Option 1: Python Dashboard (Visualization)
 
 ```bash
