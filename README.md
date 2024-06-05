@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28%2B-red)](https://streamlit.io/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: CC0](https://img.shields.io/badge/License-CC0_Public_Domain-green.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](tests/)
 
 A comprehensive, interactive web dashboard for analyzing and visualizing differential gene expression data from RNA-seq experiments. Built with Streamlit, this tool provides researchers with publication-quality visualizations and flexible data exploration capabilities.
@@ -389,7 +389,13 @@ If you use this dashboard in your research, please cite:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is dedicated to the **Public Domain** under the **CC0 1.0 Universal** license.
+
+- 🌐 **License Deed:** https://creativecommons.org/publicdomain/zero/1.0/
+- 📜 **Full Legal Code:** https://creativecommons.org/publicdomain/zero/1.0/legalcode
+- 📋 **See:** [LICENSE](LICENSE) and [PUBLIC_DOMAIN_NOTICE.md](PUBLIC_DOMAIN_NOTICE.md)
+
+You are free to use, modify, and distribute this work for any purpose, including commercial use, without restrictions.
 
 ---
 
