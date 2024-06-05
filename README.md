@@ -62,9 +62,10 @@ A comprehensive, interactive web dashboard for analyzing and visualizing differe
 4. Set main file: `app/dashboard.py`
 5. Click "Deploy!"
 
-Your dashboard will be live at: `https://[your-app].streamlit.app/`
+**🌐 Live Dashboard:** https://differential-gene-expression-dashboard-dmguedyrjaqupz7sjsekvr.streamlit.app/
 
-📖 **Full deployment guide:** See [STREAMLIT_CLOUD_DEPLOY.md](STREAMLIT_CLOUD_DEPLOY.md)
+📖 **Full deployment guide:** See [STREAMLIT_CLOUD_DEPLOY.md](STREAMLIT_CLOUD_DEPLOY.md)  
+✅ **Already deployed?** See [DEPLOYMENT_SUCCESS.md](DEPLOYMENT_SUCCESS.md)
 
 ---
 
