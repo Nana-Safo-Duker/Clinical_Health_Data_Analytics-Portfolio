@@ -6,12 +6,17 @@ import plotly.express as px
 import plotly.graph_objects as go
 from io import BytesIO
 
-# Set page config
+# Set page config - MUST be first Streamlit command
 st.set_page_config(
     page_title="Advanced Differential Gene Expression Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Show loading indicator on first load
+if 'initialized' not in st.session_state:
+    with st.spinner("Loading dashboard..."):
+        st.session_state.initialized = True
 
 # Custom CSS for better UI
 st.markdown("""
