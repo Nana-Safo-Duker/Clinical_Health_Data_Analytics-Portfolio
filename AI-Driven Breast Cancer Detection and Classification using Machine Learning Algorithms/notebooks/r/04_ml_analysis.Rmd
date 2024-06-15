@@ -1,0 +1,77 @@
+---
+title: "Machine Learning Analysis"
+author: "Breast Cancer Analysis"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Introduction
+
+This notebook contains machine learning analysis with multiple algorithms.
+
+## Run Analysis
+
+For detailed ML analysis, run the R script:
+
+```{r run-analysis, eval=FALSE}
+source("../../scripts/r/ml_analysis.R")
+```
+
+## Data Preparation
+
+```{r data-prep}
+library(caret)
+library(dplyr)
+
+df <- read.csv("../../data/breast_cancer.csv", stringsAsFactors = FALSE)
+df$diagnosis <- as.factor(df$diagnosis)
+
+# Split data
+set.seed(42)
+trainIndex <- createDataPartition(df$diagnosis, p = 0.8, list = FALSE)
+train_data <- df[trainIndex, ]
+test_data <- df[-trainIndex, ]
+```
+
+## Model Training
+
+```{r model-training}
+# Train control
+train_control <- trainControl(
+  method = "cv",
+  number = 5,
+  classProbs = TRUE
+)
+
+# Train Random Forest
+model_rf <- train(
+  diagnosis ~ ., 
+  data = train_data[, !names(train_data) %in% "id"],
+  method = "rf",
+  trControl = train_control
+)
+
+# Predictions
+predictions <- predict(model_rf, test_data)
+confusionMatrix(predictions, test_data$diagnosis)
+```
+
+## Model Comparison
+
+```{r model-comparison}
+# Compare multiple models
+# For detailed comparison, run the ml_analysis.R script
+```
+
+## Summary
+
+This ML analysis provides comprehensive model comparison and evaluation.
+
