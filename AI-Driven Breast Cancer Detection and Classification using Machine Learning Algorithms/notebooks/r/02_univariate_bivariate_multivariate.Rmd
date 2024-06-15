@@ -1,0 +1,79 @@
+---
+title: "Univariate, Bivariate, and Multivariate Analysis"
+author: "Breast Cancer Analysis"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Introduction
+
+This notebook contains:
+- Univariate Analysis
+- Bivariate Analysis
+- Multivariate Analysis
+
+## Run Analysis
+
+For detailed analysis, run the R script:
+
+```{r run-analysis, eval=FALSE}
+source("../../scripts/r/univariate_bivariate_multivariate_analysis.R")
+```
+
+## Univariate Analysis
+
+```{r univariate}
+library(ggplot2)
+library(dplyr)
+
+df <- read.csv("../../data/breast_cancer.csv", stringsAsFactors = FALSE)
+numerical_cols <- setdiff(names(df), c("id", "diagnosis"))
+
+key_features <- c("radius_mean", "texture_mean", "perimeter_mean", 
+                 "area_mean", "smoothness_mean", "compactness_mean")
+
+# Distribution plots
+for (feature in key_features[1:3]) {
+  hist(df[[feature]], main = paste("Distribution of", feature), 
+      xlab = feature, col = "steelblue")
+}
+```
+
+## Bivariate Analysis
+
+```{r bivariate}
+# Scatter plots
+plot(df$radius_mean, df$perimeter_mean, 
+    col = ifelse(df$diagnosis == "M", "red", "blue"),
+    xlab = "radius_mean", ylab = "perimeter_mean",
+    main = "Bivariate Analysis: Radius vs Perimeter")
+legend("topright", legend = c("Malignant", "Benign"), 
+      col = c("red", "blue"), pch = 1)
+```
+
+## Multivariate Analysis
+
+```{r multivariate}
+# PCA
+X <- df[numerical_cols]
+X_scaled <- scale(X)
+pca_result <- prcomp(X_scaled)
+
+# Scree plot
+plot(pca_result$sdev^2 / sum(pca_result$sdev^2), 
+    type = "o", main = "Scree Plot",
+    xlab = "Principal Component", ylab = "Explained Variance")
+```
+
+## Summary
+
+This analysis provides comprehensive univariate, bivariate, and multivariate insights.
+
