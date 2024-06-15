@@ -1,0 +1,66 @@
+---
+title: "Comprehensive Exploratory Data Analysis (EDA)"
+author: "Breast Cancer Analysis"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Introduction
+
+This notebook provides comprehensive exploratory data analysis.
+
+## Run Analysis
+
+For detailed EDA, run the R script:
+
+```{r run-analysis, eval=FALSE}
+source("../../scripts/r/comprehensive_eda.R")
+```
+
+## Data Overview
+
+```{r data-overview}
+library(dplyr)
+library(ggplot2)
+
+df <- read.csv("../../data/breast_cancer.csv", stringsAsFactors = FALSE)
+
+cat("Dataset shape:", nrow(df), "rows,", ncol(df), "columns\n")
+cat("Missing values:", sum(is.na(df)), "\n")
+```
+
+## Target Variable Analysis
+
+```{r target-analysis}
+# Diagnosis distribution
+diagnosis_counts <- table(df$diagnosis)
+barplot(diagnosis_counts, main = "Diagnosis Distribution", 
+       col = c("#3498db", "#e74c3c"))
+```
+
+## Feature Analysis
+
+```{r feature-analysis}
+numerical_cols <- setdiff(names(df), c("id", "diagnosis"))
+key_features <- c("radius_mean", "texture_mean", "perimeter_mean")
+
+# Box plots by diagnosis
+for (feature in key_features) {
+  boxplot(df[[feature]] ~ df$diagnosis, 
+         main = paste(feature, "by Diagnosis"),
+         xlab = "Diagnosis", ylab = feature)
+}
+```
+
+## Summary
+
+This EDA provides comprehensive insights into the dataset.
+

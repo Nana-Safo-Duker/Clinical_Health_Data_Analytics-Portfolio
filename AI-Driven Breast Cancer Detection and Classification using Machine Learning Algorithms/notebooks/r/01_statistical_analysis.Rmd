@@ -1,0 +1,97 @@
+---
+title: "Statistical Analysis: Descriptive, Inferential, and Exploratory"
+author: "Breast Cancer Analysis"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Introduction
+
+This notebook contains comprehensive statistical analysis including:
+- Descriptive Statistics
+- Inferential Statistics
+- Exploratory Statistical Analysis
+
+## Load Libraries and Data
+
+```{r load-libraries}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(corrplot)
+library(psych)
+library(car)
+```
+
+```{r load-data}
+df <- read.csv("../../data/breast_cancer.csv", stringsAsFactors = FALSE)
+```
+
+## Run Statistical Analysis
+
+For detailed statistical analysis, run the R script:
+
+```{r run-analysis, eval=FALSE}
+source("../../scripts/r/statistical_analysis.R")
+```
+
+Or execute the analysis directly in the notebook by running the script cells below.
+
+## Descriptive Statistics
+
+```{r descriptive-stats}
+# Basic information
+cat("Dataset shape:", nrow(df), "rows,", ncol(df), "columns\n")
+
+# Get numerical columns
+numerical_cols <- setdiff(names(df), c("id", "diagnosis"))
+
+# Descriptive statistics
+desc_stats <- describe(df[numerical_cols])
+print(desc_stats)
+
+# Diagnosis distribution
+diagnosis_counts <- table(df$diagnosis)
+diagnosis_props <- prop.table(diagnosis_counts) * 100
+print(diagnosis_counts)
+print(diagnosis_props)
+```
+
+## Inferential Statistics
+
+```{r inferential-stats}
+# Separate data by diagnosis
+malignant <- df[df$diagnosis == "M", ]
+benign <- df[df$diagnosis == "B", ]
+
+# T-tests
+key_features <- numerical_cols[1:10]
+for (feature in key_features) {
+  test_result <- t.test(malignant[[feature]], benign[[feature]])
+  cat(feature, ": t =", test_result$statistic, ", p =", test_result$p.value, "\n")
+}
+```
+
+## Exploratory Analysis
+
+```{r exploratory-analysis}
+# Correlation matrix
+correlation_matrix <- cor(df[numerical_cols], use = "complete.obs")
+
+# Visualization
+corrplot(correlation_matrix, method = "color", type = "upper", 
+         order = "hclust", tl.cex = 0.6, tl.col = "black")
+```
+
+## Summary
+
+This analysis provides comprehensive statistical insights into the breast cancer dataset.
+

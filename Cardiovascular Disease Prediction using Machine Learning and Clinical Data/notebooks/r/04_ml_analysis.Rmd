@@ -1,0 +1,441 @@
+---
+title: "Machine Learning Analysis"
+author: "Cardiovascular Disease Analysis"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, 
+                      fig.width = 12, fig.height = 6)
+```
+
+## Introduction
+
+This notebook contains comprehensive machine learning analysis including:
+- Data Preprocessing
+- Feature Engineering
+- Model Training and Evaluation
+- Model Comparison
+- Hyperparameter Tuning
+- Model Selection
+
+## Load Libraries and Data
+
+```{r load-libraries}
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(caret)
+library(randomForest)
+library(e1071)
+library(rpart)
+library(xgboost)
+library(pROC)
+library(pander)
+library(gridExtra)
+
+# Set theme for plots
+theme_set(theme_minimal() + theme(plot.title = element_text(size = 14, face = "bold")))
+
+# Load the dataset
+df <- read.csv("../../data/Cardiovascular_Disease_Dataset.csv", stringsAsFactors = FALSE)
+
+cat("Dataset loaded successfully!\n")
+cat("Shape:", nrow(df), "rows,", ncol(df), "columns\n")
+head(df)
+```
+
+## 1. Data Preprocessing
+
+### 1.1 Prepare Features and Target
+
+```{r prepare-data}
+# Prepare features and target
+# Drop patient ID as it's not a feature
+X <- df[, !names(df) %in% c("target", "patientid")]
+y <- df$target
+
+cat("Features shape:", nrow(X), "rows,", ncol(X), "columns\n")
+cat("Target shape:", length(y), "\n")
+cat("\nTarget distribution:\n")
+print(table(y))
+cat("\nTarget distribution percentage:\n")
+print(prop.table(table(y)) * 100)
+
+# Check for missing values
+cat("\nMissing values in features:\n")
+print(colSums(is.na(X)))
+cat("Missing values in target:", sum(is.na(y)), "\n")
+
+# Split data into training and testing sets
+set.seed(42)
+train_index <- createDataPartition(y, p = 0.8, list = FALSE)
+X_train <- X[train_index, ]
+X_test <- X[-train_index, ]
+y_train <- y[train_index]
+y_test <- y[-train_index]
+
+cat("\nTraining set:", nrow(X_train), "samples\n")
+cat("Test set:", nrow(X_test), "samples\n")
+cat("\nTraining target distribution:\n")
+print(table(y_train))
+cat("\nTest target distribution:\n")
+print(table(y_test))
+```
+
+### 1.2 Scale Numerical Features
+
+```{r scale-features}
+# Scale numerical features
+numerical_cols <- c("age", "restingBP", "serumcholestrol", "maxheartrate", "oldpeak")
+
+# Create preprocessor
+preprocess_params <- preProcess(X_train[, numerical_cols], method = c("center", "scale"))
+
+# Apply preprocessing
+X_train_scaled <- X_train
+X_test_scaled <- X_test
+X_train_scaled[, numerical_cols] <- predict(preprocess_params, X_train[, numerical_cols])
+X_test_scaled[, numerical_cols] <- predict(preprocess_params, X_test[, numerical_cols])
+
+cat("Features scaled successfully!\n")
+cat("Scaled training set shape:", nrow(X_train_scaled), "rows,", ncol(X_train_scaled), "columns\n")
+cat("Scaled test set shape:", nrow(X_test_scaled), "rows,", ncol(X_test_scaled), "columns\n")
+```
+
+## 2. Model Training and Evaluation
+
+### 2.1 Define Models and Training Function
+
+```{r define-models}
+# Function to train and evaluate models
+train_and_evaluate <- function(model_name, model, X_train_data, X_test_data, y_train_data, y_test_data) {
+  # Train model
+  trained_model <- train(x = X_train_data, y = factor(y_train_data), 
+                        method = model, 
+                        trControl = trainControl(method = "cv", number = 5, 
+                                                classProbs = TRUE,
+                                                summaryFunction = twoClassSummary),
+                        metric = "ROC")
+  
+  # Predictions
+  y_pred <- predict(trained_model, newdata = X_test_data)
+  y_pred_proba <- predict(trained_model, newdata = X_test_data, type = "prob")[, 2]
+  
+  # Calculate metrics
+  cm <- confusionMatrix(y_pred, factor(y_test_data))
+  accuracy <- cm$overall["Accuracy"]
+  precision <- cm$byClass["Precision"]
+  recall <- cm$byClass["Recall"]
+  f1 <- cm$byClass["F1"]
+  
+  # ROC AUC
+  roc_obj <- roc(y_test_data, y_pred_proba, quiet = TRUE)
+  roc_auc <- as.numeric(auc(roc_obj))
+  
+  # Cross-validation results
+  cv_results <- trained_model$results
+  cv_roc <- max(cv_results$ROC, na.rm = TRUE)
+  
+  return(list(
+    model = trained_model,
+    accuracy = accuracy,
+    precision = precision,
+    recall = recall,
+    f1 = f1,
+    roc_auc = roc_auc,
+    cv_roc = cv_roc,
+    y_pred = y_pred,
+    y_pred_proba = y_pred_proba,
+    confusion_matrix = cm
+  ))
+}
+
+# Initialize results storage
+results <- list()
+```
+
+### 2.2 Logistic Regression
+
+```{r logistic-regression}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("Training Logistic Regression...\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+results$logistic <- train_and_evaluate(
+  "Logistic Regression",
+  "glm",
+  X_train_scaled, X_test_scaled, y_train, y_test
+)
+
+cat("Accuracy:", results$logistic$accuracy, "\n")
+cat("Precision:", results$logistic$precision, "\n")
+cat("Recall:", results$logistic$recall, "\n")
+cat("F1 Score:", results$logistic$f1, "\n")
+cat("ROC AUC:", results$logistic$roc_auc, "\n")
+cat("CV ROC:", results$logistic$cv_roc, "\n")
+print(results$logistic$confusion_matrix)
+```
+
+### 2.3 Random Forest
+
+```{r random-forest}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("Training Random Forest...\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+results$random_forest <- train_and_evaluate(
+  "Random Forest",
+  "rf",
+  X_train, X_test, y_train, y_test
+)
+
+cat("Accuracy:", results$random_forest$accuracy, "\n")
+cat("Precision:", results$random_forest$precision, "\n")
+cat("Recall:", results$random_forest$recall, "\n")
+cat("F1 Score:", results$random_forest$f1, "\n")
+cat("ROC AUC:", results$random_forest$roc_auc, "\n")
+cat("CV ROC:", results$random_forest$cv_roc, "\n")
+print(results$random_forest$confusion_matrix)
+```
+
+### 2.4 Decision Tree
+
+```{r decision-tree}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("Training Decision Tree...\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+results$decision_tree <- train_and_evaluate(
+  "Decision Tree",
+  "rpart",
+  X_train, X_test, y_train, y_test
+)
+
+cat("Accuracy:", results$decision_tree$accuracy, "\n")
+cat("Precision:", results$decision_tree$precision, "\n")
+cat("Recall:", results$decision_tree$recall, "\n")
+cat("F1 Score:", results$decision_tree$f1, "\n")
+cat("ROC AUC:", results$decision_tree$roc_auc, "\n")
+cat("CV ROC:", results$decision_tree$cv_roc, "\n")
+print(results$decision_tree$confusion_matrix)
+```
+
+### 2.5 Support Vector Machine (SVM)
+
+```{r svm}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("Training SVM...\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+results$svm <- train_and_evaluate(
+  "SVM",
+  "svmRadial",
+  X_train_scaled, X_test_scaled, y_train, y_test
+)
+
+cat("Accuracy:", results$svm$accuracy, "\n")
+cat("Precision:", results$svm$precision, "\n")
+cat("Recall:", results$svm$recall, "\n")
+cat("F1 Score:", results$svm$f1, "\n")
+cat("ROC AUC:", results$svm$roc_auc, "\n")
+cat("CV ROC:", results$svm$cv_roc, "\n")
+print(results$svm$confusion_matrix)
+```
+
+### 2.6 XGBoost
+
+```{r xgboost}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("Training XGBoost...\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+# XGBoost requires specific formatting
+train_data <- xgb.DMatrix(data = as.matrix(X_train), label = y_train)
+test_data <- xgb.DMatrix(data = as.matrix(X_test), label = y_test)
+
+xgb_model <- xgb.train(
+  data = train_data,
+  nrounds = 100,
+  objective = "binary:logistic",
+  eval_metric = "logloss",
+  max_depth = 6,
+  eta = 0.3,
+  verbose = 0
+)
+
+y_pred_proba_xgb <- predict(xgb_model, test_data)
+y_pred_xgb <- ifelse(y_pred_proba_xgb > 0.5, 1, 0)
+
+# Calculate metrics
+cm_xgb <- confusionMatrix(factor(y_pred_xgb), factor(y_test))
+roc_obj_xgb <- roc(y_test, y_pred_proba_xgb, quiet = TRUE)
+
+results$xgb <- list(
+  model = xgb_model,
+  accuracy = as.numeric(cm_xgb$overall["Accuracy"]),
+  precision = as.numeric(cm_xgb$byClass["Precision"]),
+  recall = as.numeric(cm_xgb$byClass["Recall"]),
+  f1 = as.numeric(cm_xgb$byClass["F1"]),
+  roc_auc = as.numeric(auc(roc_obj_xgb)),
+  cv_roc = NA,
+  y_pred = y_pred_xgb,
+  y_pred_proba = y_pred_proba_xgb,
+  confusion_matrix = cm_xgb
+)
+
+cat("Accuracy:", results$xgb$accuracy, "\n")
+cat("Precision:", results$xgb$precision, "\n")
+cat("Recall:", results$xgb$recall, "\n")
+cat("F1 Score:", results$xgb$f1, "\n")
+cat("ROC AUC:", results$xgb$roc_auc, "\n")
+print(results$xgb$confusion_matrix)
+```
+
+## 3. Model Comparison
+
+### 3.1 Create Comparison Table
+
+```{r model-comparison}
+# Create comparison dataframe
+comparison_df <- data.frame(
+  Model = names(results),
+  Accuracy = sapply(results, function(x) x$accuracy),
+  Precision = sapply(results, function(x) x$precision),
+  Recall = sapply(results, function(x) x$recall),
+  F1_Score = sapply(results, function(x) x$f1),
+  ROC_AUC = sapply(results, function(x) x$roc_auc),
+  CV_ROC = sapply(results, function(x) ifelse(is.na(x$cv_roc), NA, x$cv_roc))
+)
+
+comparison_df <- comparison_df[order(-comparison_df$ROC_AUC), ]
+
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("MODEL COMPARISON\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+print(comparison_df)
+
+# Visualize model comparison
+p1 <- ggplot(comparison_df, aes(x = reorder(Model, Accuracy), y = Accuracy)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
+  coord_flip() +
+  labs(title = "Model Accuracy Comparison", x = "Model", y = "Accuracy") +
+  theme_minimal()
+
+p2 <- ggplot(comparison_df, aes(x = reorder(Model, ROC_AUC), y = ROC_AUC)) +
+  geom_bar(stat = "identity", fill = "coral", alpha = 0.7) +
+  coord_flip() +
+  labs(title = "ROC AUC Comparison", x = "Model", y = "ROC AUC") +
+  theme_minimal()
+
+p3 <- ggplot(comparison_df, aes(x = reorder(Model, F1_Score), y = F1_Score)) +
+  geom_bar(stat = "identity", fill = "green", alpha = 0.7) +
+  coord_flip() +
+  labs(title = "F1 Score Comparison", x = "Model", y = "F1 Score") +
+  theme_minimal()
+
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+### 3.2 ROC Curves
+
+```{r roc-curves}
+# Plot ROC curves for all models
+roc_plots <- list()
+for (model_name in names(results)) {
+  if (!is.null(results[[model_name]]$y_pred_proba)) {
+    roc_obj <- roc(y_test, results[[model_name]]$y_pred_proba, quiet = TRUE)
+    roc_data <- data.frame(
+      FPR = 1 - roc_obj$specificities,
+      TPR = roc_obj$sensitivities,
+      Model = model_name
+    )
+    roc_plots[[model_name]] <- roc_data
+  }
+}
+
+# Combine all ROC data
+roc_combined <- do.call(rbind, roc_plots)
+
+ggplot(roc_combined, aes(x = FPR, y = TPR, color = Model)) +
+  geom_line(size = 1) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray") +
+  labs(title = "ROC Curves for All Models",
+       x = "False Positive Rate",
+       y = "True Positive Rate") +
+  theme_minimal() +
+  theme(legend.position = "right")
+```
+
+### 3.3 Confusion Matrices for Top Models
+
+```{r confusion-matrices}
+# Get top 3 models by ROC AUC
+top_3_models <- head(comparison_df$Model, 3)
+
+confusion_plots <- list()
+for (model_name in top_3_models) {
+  cm <- results[[model_name]]$confusion_matrix$table
+  cm_df <- as.data.frame(cm)
+  names(cm_df) <- c("Predicted", "Actual", "Freq")
+  
+  p <- ggplot(cm_df, aes(x = Actual, y = Predicted, fill = Freq)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = Freq), color = "black", size = 5) +
+    scale_fill_gradient(low = "white", high = "steelblue") +
+    labs(title = paste(model_name, "\nAccuracy:", round(results[[model_name]]$accuracy, 3)),
+         x = "Actual", y = "Predicted") +
+    theme_minimal() +
+    theme(legend.position = "none")
+  
+  confusion_plots[[model_name]] <- p
+}
+
+do.call(grid.arrange, c(confusion_plots, ncol = 3))
+```
+
+## 4. Feature Importance
+
+### 4.1 Random Forest Feature Importance
+
+```{r feature-importance}
+# Extract feature importance from Random Forest
+if (!is.null(results$random_forest$model)) {
+  rf_importance <- varImp(results$random_forest$model)
+  importance_df <- data.frame(
+    Feature = rownames(rf_importance$importance),
+    Importance = rf_importance$importance[, 1]
+  )
+  importance_df <- importance_df[order(-importance_df$Importance), ]
+  
+  ggplot(importance_df, aes(x = reorder(Feature, Importance), y = Importance)) +
+    geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
+    coord_flip() +
+    labs(title = "Random Forest Feature Importance",
+         x = "Feature",
+         y = "Importance") +
+    theme_minimal()
+}
+```
+
+## 5. Summary and Conclusions
+
+### Key Findings:
+- Multiple machine learning models were trained and evaluated
+- Model performance varies across different algorithms
+- Tree-based models (Random Forest, XGBoost) typically perform well for this type of data
+- Feature importance analysis reveals which features are most predictive
+
+### Recommendations:
+- Use the best-performing model based on ROC AUC and other metrics
+- Consider ensemble methods for improved performance
+- Perform hyperparameter tuning for optimal results
+- Evaluate model interpretability for clinical applications
