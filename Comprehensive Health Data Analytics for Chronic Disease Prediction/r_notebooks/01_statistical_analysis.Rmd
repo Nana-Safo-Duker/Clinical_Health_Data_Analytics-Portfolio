@@ -1,0 +1,147 @@
+---
+title: "Statistical Analysis: Descriptive, Inferential, and Exploratory"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+# Statistical Analysis
+
+This notebook contains comprehensive statistical analysis including:
+- Descriptive Statistics
+- Inferential Statistics
+- Exploratory Data Analysis
+
+## Load Libraries
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r load-libraries}
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(VIM)
+library(psych)
+```
+
+## Load and Clean Data
+
+```{r load-data}
+df <- read.csv("../data/health_data.csv", stringsAsFactors = FALSE)
+
+# Remove unnecessary columns
+if ("Unnamed..0" %in% colnames(df)) {
+  df <- df[, !colnames(df) %in% "Unnamed..0"]
+}
+
+# Data cleaning and preprocessing
+df$age_years <- df$age / 365.25
+df$bmi <- df$weight / ((df$height / 100) ^ 2)
+
+# Clean blood pressure data
+df <- df[df$ap_hi >= 80 & df$ap_hi <= 250, ]
+df <- df[df$ap_lo >= 40 & df$ap_lo <= 150, ]
+df <- df[df$ap_hi >= df$ap_lo, ]
+
+# Clean height and weight
+df <- df[df$height >= 100 & df$height <= 220, ]
+df <- df[df$weight >= 30 & df$weight <= 200, ]
+df <- df[df$bmi >= 10 & df$bmi <= 60, ]
+
+cat("Dataset shape:", dim(df), "\n")
+```
+
+## Descriptive Statistics
+
+### Numerical Variables
+
+```{r descriptive-numerical}
+numerical_cols <- c("age_years", "height", "weight", "ap_hi", "ap_lo", "bmi")
+summary(df[numerical_cols])
+```
+
+### Categorical Variables
+
+```{r descriptive-categorical}
+categorical_cols <- c("gender", "cholesterol", "gluc", "smoke", "alco", "active", "cardio")
+for (col in categorical_cols) {
+  cat("\n", toupper(col), ":\n", sep="")
+  print(table(df[[col]]))
+  print(prop.table(table(df[[col]])))
+}
+```
+
+## Inferential Statistics
+
+### T-test
+
+```{r t-test}
+cardio_yes <- df$age_years[df$cardio == 1]
+cardio_no <- df$age_years[df$cardio == 0]
+
+t_test_result <- t.test(cardio_yes, cardio_no)
+print(t_test_result)
+```
+
+### Chi-square Tests
+
+```{r chi-square}
+categorical_vars <- c("gender", "cholesterol", "gluc", "smoke", "alco", "active")
+for (var in categorical_vars) {
+  cat("\n", toupper(var), " vs Cardio:\n", sep="")
+  contingency_table <- table(df[[var]], df$cardio)
+  chi_test <- chisq.test(contingency_table)
+  print(chi_test)
+}
+```
+
+### Correlation Analysis
+
+```{r correlation}
+correlation_cols <- c("age_years", "height", "weight", "ap_hi", "ap_lo", "bmi", "cardio")
+correlation_matrix <- cor(df[correlation_cols], use = "complete.obs")
+print(correlation_matrix)
+
+# Visualize correlation matrix
+corrplot(correlation_matrix, method = "color", type = "upper", 
+         order = "hclust", tl.cex = 0.8, tl.col = "black", 
+         addCoef.col = "black", number.cex = 0.7)
+```
+
+## Exploratory Data Analysis
+
+### Distribution of Target Variable
+
+```{r target-distribution}
+cardio_counts <- table(df$cardio)
+barplot(cardio_counts, names.arg = c("No (0)", "Yes (1)"), 
+        col = c("skyblue", "salmon"), border = "black",
+        main = "Distribution of Cardiovascular Disease",
+        xlab = "Cardiovascular Disease", ylab = "Count")
+```
+
+### Distribution of Numerical Variables
+
+```{r numerical-distributions}
+par(mfrow = c(2, 3))
+for (col in numerical_cols) {
+  hist(df[[col]], breaks = 50, main = paste("Distribution of", toupper(col)),
+       xlab = col, col = "steelblue", border = "black")
+}
+```
+
+### Box Plots by Cardio Status
+
+```{r boxplots-cardio}
+par(mfrow = c(2, 3))
+for (col in numerical_cols) {
+  boxplot(df[[col]] ~ df$cardio, main = paste(toupper(col), "by Cardio Status"),
+          xlab = "Cardiovascular Disease", ylab = col,
+          col = c("skyblue", "salmon"), border = "black")
+}
+```
+

@@ -1,0 +1,194 @@
+---
+title: "Univariate, Bivariate, and Multivariate Analysis"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Objectives
+- Univariate Analysis: Single variable analysis
+- Bivariate Analysis: Two variable relationships
+- Multivariate Analysis: Multiple variable relationships
+
+```{r load-libraries}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(lubridate)
+library(corrplot)
+library(gridExtra)
+```
+
+```{r load-data}
+df <- read.csv("../../data/mock_treatment_starts_2016.csv", stringsAsFactors = FALSE)
+df$TreatmentStart <- as.Date(df$TreatmentStart, format = "%m/%d/%y")
+df$Year <- year(df$TreatmentStart)
+df$Month <- month(df$TreatmentStart)
+df$MonthName <- month.name[df$Month]
+df$Weekday <- weekdays(df$TreatmentStart)
+
+cat("Dataset loaded successfully!\n")
+cat("Shape:", dim(df), "\n")
+head(df)
+```
+
+## 1. Univariate Analysis
+
+```{r univariate-numerical}
+# Univariate Analysis: Numerical Variable (Dosage)
+cat("=" %+% rep("=", 59), "\n")
+cat("UNIVARIATE ANALYSIS: DOSAGE\n")
+cat("=" %+% rep("=", 59), "\n")
+
+# Summary statistics
+summary(df$Dosage)
+cat("\nSkewness:", moments::skewness(df$Dosage), "\n")
+cat("Kurtosis:", moments::kurtosis(df$Dosage), "\n")
+
+# Visualizations
+p1 <- ggplot(df, aes(x = Dosage)) +
+  geom_histogram(bins = 15, fill = "steelblue", alpha = 0.7, color = "black") +
+  geom_vline(aes(xintercept = mean(Dosage)), color = "red", linetype = "dashed") +
+  geom_vline(aes(xintercept = median(Dosage)), color = "green", linetype = "dashed") +
+  labs(title = "Histogram: Dosage Distribution") + theme_minimal()
+
+p2 <- ggplot(df, aes(y = Dosage)) +
+  geom_boxplot() +
+  labs(title = "Box Plot: Dosage") + theme_minimal()
+
+p3 <- ggplot(df, aes(x = Dosage)) +
+  geom_density(color = "purple") +
+  labs(title = "Density Plot: Dosage") + theme_minimal()
+
+p4 <- ggplot(df, aes(sample = Dosage)) +
+  stat_qq() + stat_qq_line() +
+  labs(title = "Q-Q Plot: Normality Check") + theme_minimal()
+
+grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
+```
+
+```{r univariate-categorical}
+# Univariate Analysis: Categorical Variables
+cat("=" %+% rep("=", 59), "\n")
+cat("UNIVARIATE ANALYSIS: CATEGORICAL VARIABLES\n")
+cat("=" %+% rep("=", 59), "\n")
+
+cat("\nDrug Distribution:\n")
+print(table(df$Drug))
+cat("\nProportions:\n")
+print(prop.table(table(df$Drug)) * 100)
+
+p1 <- ggplot(df, aes(x = Drug)) +
+  geom_bar(fill = c("steelblue", "coral")) +
+  labs(title = "Drug Distribution", x = "Drug", y = "Count") + theme_minimal()
+
+month_counts <- df %>% 
+  group_by(MonthName) %>% 
+  summarise(Count = n()) %>% 
+  arrange(match(MonthName, month.name))
+
+p2 <- ggplot(month_counts, aes(x = MonthName, y = Count)) +
+  geom_bar(stat = "identity", fill = "teal") +
+  labs(title = "Treatment Starts by Month", x = "Month", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+grid.arrange(p1, p2, nrow = 1, ncol = 2)
+```
+
+## 2. Bivariate Analysis
+
+```{r bivariate-dosage-drug}
+# Bivariate Analysis: Dosage vs Drug
+cat("=" %+% rep("=", 59), "\n")
+cat("BIVARIATE ANALYSIS: DOSAGE vs DRUG\n")
+cat("=" %+% rep("=", 59), "\n")
+
+cat("\nDosage by Drug:\n")
+print(df %>% group_by(Drug) %>% summarise_all(list(mean, median, sd, min, max)) %>% 
+      select(Drug, Dosage_fn1, Dosage_fn2, Dosage_fn3, Dosage_fn4, Dosage_fn5))
+
+p1 <- ggplot(df, aes(x = Drug, y = Dosage)) +
+  geom_boxplot() +
+  labs(title = "Dosage Distribution by Drug") + theme_minimal()
+
+p2 <- ggplot(df, aes(x = Drug, y = Dosage)) +
+  geom_violin() +
+  labs(title = "Dosage Distribution (Violin) by Drug") + theme_minimal()
+
+mean_dosage <- df %>% group_by(Drug) %>% summarise(Mean_Dosage = mean(Dosage))
+p3 <- ggplot(mean_dosage, aes(x = Drug, y = Mean_Dosage)) +
+  geom_bar(stat = "identity", fill = c("steelblue", "coral")) +
+  labs(title = "Mean Dosage by Drug", x = "Drug", y = "Mean Dosage") + theme_minimal()
+
+grid.arrange(p1, p2, p3, nrow = 2, ncol = 2)
+```
+
+```{r bivariate-correlation}
+# Bivariate Analysis: Correlation and Association
+df_encoded <- df
+df_encoded$Drug_encoded <- ifelse(df_encoded$Drug == "Cisplatin", 0, 1)
+
+corr_vars <- df_encoded[, c("Dosage", "Drug_encoded", "Month")]
+corr_matrix <- cor(corr_vars)
+
+cat("Correlation Matrix:\n")
+print(corr_matrix)
+
+# Chi-square test
+contingency_table <- table(df$Drug, df$MonthName)
+chi2_test <- chisq.test(contingency_table)
+cat("\nChi-square test for Drug-Month association:\n")
+cat("  Chi-square statistic:", chi2_test$statistic, "\n")
+cat("  p-value:", chi2_test$p.value, "\n")
+cat("  Significant association:", ifelse(chi2_test$p.value < 0.05, "Yes", "No"), "(α=0.05)\n")
+
+p1 <- corrplot(corr_matrix, method = "color", type = "upper", 
+               addCoef.col = "black", tl.col = "black", tl.srt = 45)
+
+p2 <- ggplot(df_encoded, aes(x = Month, y = Dosage, color = factor(Drug_encoded))) +
+  geom_point(alpha = 0.6, size = 3) +
+  scale_color_manual(values = c("0" = "blue", "1" = "red"), 
+                     labels = c("0" = "Cisplatin", "1" = "Nivolumab")) +
+  labs(title = "Dosage vs Month (colored by Drug)", 
+       x = "Month", y = "Dosage", color = "Drug") + theme_minimal()
+print(p2)
+```
+
+## 3. Multivariate Analysis
+
+```{r multivariate}
+# Multivariate Analysis: Multiple Variables
+month_order <- month.name[1:6]
+drug_month_mean <- df %>% 
+  group_by(Drug, MonthName) %>% 
+  summarise(Mean_Dosage = mean(Dosage)) %>% 
+  pivot_wider(names_from = MonthName, values_from = Mean_Dosage) %>% 
+  select(Drug, all_of(month_order))
+
+cat("Mean Dosage by Drug and Month:\n")
+print(drug_month_mean)
+
+p1 <- df %>% 
+  group_by(Drug, MonthName) %>% 
+  summarise(Mean_Dosage = mean(Dosage)) %>% 
+  ggplot(aes(x = Drug, y = Mean_Dosage, fill = MonthName)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Mean Dosage by Drug and Month") + theme_minimal()
+
+# Heatmap
+drug_month_matrix <- as.matrix(drug_month_mean[, -1])
+rownames(drug_month_matrix) <- drug_month_mean$Drug
+p2 <- corrplot(drug_month_matrix, is.corr = FALSE, method = "color", 
+               tl.col = "black", tl.srt = 45, title = "Mean Dosage Heatmap")
+
+grid.arrange(p1, nrow = 1)
+```
+
+```{r helper}
+`%+%` <- function(a, b) paste0(a, b)
+```
+
+
