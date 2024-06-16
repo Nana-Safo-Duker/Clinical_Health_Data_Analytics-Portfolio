@@ -1,0 +1,301 @@
+---
+title: "Pima Indians Diabetes Dataset - Statistical Analysis"
+subtitle: "Descriptive, Inferential, and Exploratory Statistical Analysis"
+author: "Data Science Analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.width = 12, fig.height = 8)
+```
+
+```{r libraries}
+# Load necessary libraries
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(psych)
+library(car)
+library(gridExtra)
+library(VIM)
+```
+
+## 1. Load and Prepare Data
+
+```{r load-data}
+# Load the dataset
+data <- read.csv("../../data/pima-indians-diabetes.csv", skip = 9, header = FALSE)
+
+# Set column names
+colnames(data) <- c(
+  "Pregnancies",
+  "Glucose",
+  "BloodPressure",
+  "SkinThickness",
+  "Insulin",
+  "BMI",
+  "DiabetesPedigreeFunction",
+  "Age",
+  "Outcome"
+)
+
+# Convert Outcome to factor
+data$Outcome <- as.factor(data$Outcome)
+
+# Display basic information
+cat("Dataset Shape:", dim(data), "\n")
+cat("Column Names:", colnames(data), "\n")
+cat("\nData Types:\n")
+str(data)
+
+head(data)
+```
+
+## 2. Descriptive Statistics
+
+### 2.1 Basic Descriptive Statistics
+
+```{r descriptive-basic}
+# Basic descriptive statistics
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat("DESCRIPTIVE STATISTICS\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+summary(data)
+```
+
+### 2.2 Detailed Descriptive Statistics
+
+```{r descriptive-detailed}
+# Detailed descriptive statistics using psych package
+numeric_cols <- data %>% select(-Outcome)
+desc_stats <- describe(numeric_cols)
+
+# Add additional statistics
+desc_stats$Variance <- apply(numeric_cols, 2, var)
+desc_stats$Range <- apply(numeric_cols, 2, function(x) max(x) - min(x))
+desc_stats$IQR <- apply(numeric_cols, 2, IQR)
+
+cat("\n", paste(rep("=", 60), collapse = ""), "\n")
+cat("DETAILED DESCRIPTIVE STATISTICS\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+print(desc_stats, digits = 3)
+```
+
+### 2.3 Missing Values and Zero Values Analysis
+
+```{r missing-values}
+# Check for missing values
+cat("\n", paste(rep("=", 60), collapse = ""), "\n")
+cat("MISSING VALUES ANALYSIS\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+missing <- sapply(data, function(x) sum(is.na(x)))
+missing_pct <- (missing / nrow(data)) * 100
+missing_df <- data.frame(
+  Missing_Count = missing,
+  Missing_Percentage = missing_pct
+)
+print(missing_df[missing_df$Missing_Count > 0, ])
+
+# Check for zeros (potential missing values)
+cat("\n", paste(rep("=", 60), collapse = ""), "\n")
+cat("ZERO VALUES (Potential Missing Data)\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+zero_cols <- c("Glucose", "BloodPressure", "SkinThickness", "Insulin", "BMI")
+for (col in zero_cols) {
+  zero_count <- sum(data[[col]] == 0, na.rm = TRUE)
+  cat(sprintf("%s: %d zeros (%.2f%%)\n", col, zero_count, zero_count/nrow(data)*100))
+}
+```
+
+### 2.4 Outcome Distribution
+
+```{r outcome-distribution}
+# Outcome distribution
+cat("\n", paste(rep("=", 60), collapse = ""), "\n")
+cat("OUTCOME DISTRIBUTION\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+outcome_counts <- table(data$Outcome)
+outcome_pct <- prop.table(outcome_counts) * 100
+outcome_df <- data.frame(
+  Outcome = names(outcome_counts),
+  Count = as.numeric(outcome_counts),
+  Percentage = as.numeric(outcome_pct)
+)
+print(outcome_df)
+
+# Visualize outcome distribution
+ggplot(data, aes(x = Outcome, fill = Outcome)) +
+  geom_bar(alpha = 0.7) +
+  scale_fill_manual(values = c("skyblue", "salmon"), labels = c("No Diabetes", "Diabetes")) +
+  labs(title = "Distribution of Diabetes Outcomes",
+       x = "Outcome (0 = No Diabetes, 1 = Diabetes)",
+       y = "Count") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+## 3. Inferential Statistics
+
+### 3.1 T-Tests: Compare Means Between Groups
+
+```{r t-tests}
+# T-tests: Compare means between diabetic and non-diabetic groups
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat("INDEPENDENT T-TESTS (Diabetic vs Non-Diabetic)\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+diabetic <- data[data$Outcome == 1, ]
+non_diabetic <- data[data$Outcome == 0, ]
+
+numeric_features <- c("Pregnancies", "Glucose", "BloodPressure", "SkinThickness",
+                     "Insulin", "BMI", "DiabetesPedigreeFunction", "Age")
+
+ttest_results <- list()
+for (feature in numeric_features) {
+  test_result <- t.test(diabetic[[feature]], non_diabetic[[feature]])
+  ttest_results[[feature]] <- data.frame(
+    Feature = feature,
+    T_statistic = test_result$statistic,
+    P_value = test_result$p.value,
+    Significant = ifelse(test_result$p.value < 0.05, "Yes", "No"),
+    Diabetic_Mean = mean(diabetic[[feature]], na.rm = TRUE),
+    Non_Diabetic_Mean = mean(non_diabetic[[feature]], na.rm = TRUE),
+    Difference = mean(diabetic[[feature]], na.rm = TRUE) - mean(non_diabetic[[feature]], na.rm = TRUE)
+  )
+}
+
+ttest_df <- do.call(rbind, ttest_results)
+print(ttest_df, digits = 4)
+```
+
+### 3.2 Correlation Analysis
+
+```{r correlation}
+# Correlation analysis
+cat("\n", paste(rep("=", 60), collapse = ""), "\n")
+cat("CORRELATION ANALYSIS\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+# Convert Outcome to numeric for correlation
+data_numeric_corr <- data
+data_numeric_corr$Outcome <- as.numeric(data_numeric_corr$Outcome) - 1
+
+correlation_matrix <- cor(data_numeric_corr[, c(numeric_features, "Outcome")], use = "complete.obs")
+correlation_df <- data.frame(
+  Feature = names(correlation_matrix[, "Outcome"])[names(correlation_matrix[, "Outcome"]) != "Outcome"],
+  Correlation = as.numeric(correlation_matrix[names(correlation_matrix[, "Outcome"]) != "Outcome", "Outcome"])
+)
+correlation_df <- correlation_df[order(abs(correlation_df$Correlation), decreasing = TRUE), ]
+print(correlation_df, digits = 3)
+
+# Visualize correlation matrix
+cor_all <- cor(data_numeric_corr[, c(numeric_features, "Outcome")], use = "complete.obs")
+corrplot(cor_all, method = "color", type = "upper", order = "hclust",
+         tl.cex = 0.8, tl.col = "black", tl.srt = 45,
+         addCoef.col = "black", number.cex = 0.7,
+         col = colorRampPalette(c("blue", "white", "red"))(200),
+         title = "Correlation Matrix", mar = c(0,0,2,0))
+```
+
+### 3.3 Chi-Square Tests
+
+```{r chi-square}
+# Chi-square tests for categorical associations
+cat("\n", paste(rep("=", 60), collapse = ""), "\n")
+cat("CHI-SQUARE TESTS\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+# Create age groups
+data$AgeGroup <- cut(data$Age, breaks = c(0, 30, 40, 50, 100),
+                     labels = c("<30", "30-40", "40-50", "50+"))
+
+# Create BMI categories
+data$BMICategory <- cut(data$BMI, breaks = c(0, 18.5, 25, 30, 100),
+                        labels = c("Underweight", "Normal", "Overweight", "Obese"))
+
+# Chi-square test: Age Group vs Outcome
+age_outcome <- table(data$AgeGroup, data$Outcome)
+chi2_age <- chisq.test(age_outcome)
+cat("Age Group vs Outcome:\n")
+cat(sprintf("Chi-square statistic: %.4f\n", chi2_age$statistic))
+cat(sprintf("P-value: %.4f\n", chi2_age$p.value))
+cat(sprintf("Significant: %s\n\n", ifelse(chi2_age$p.value < 0.05, "Yes", "No")))
+print(age_outcome)
+
+# Chi-square test: BMI Category vs Outcome
+bmi_outcome <- table(data$BMICategory, data$Outcome)
+chi2_bmi <- chisq.test(bmi_outcome)
+cat("\nBMI Category vs Outcome:\n")
+cat(sprintf("Chi-square statistic: %.4f\n", chi2_bmi$statistic))
+cat(sprintf("P-value: %.4f\n", chi2_bmi$p.value))
+cat(sprintf("Significant: %s\n\n", ifelse(chi2_bmi$p.value < 0.05, "Yes", "No")))
+print(bmi_outcome)
+```
+
+### 3.4 Confidence Intervals
+
+```{r confidence-intervals}
+# Calculate 95% confidence intervals for key features
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat("95% CONFIDENCE INTERVALS\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+confidence_intervals <- list()
+for (feature in numeric_features) {
+  mean_val <- mean(data[[feature]], na.rm = TRUE)
+  n <- sum(!is.na(data[[feature]]))
+  se <- sd(data[[feature]], na.rm = TRUE) / sqrt(n)
+  t_critical <- qt(0.975, df = n - 1)
+  margin_error <- t_critical * se
+  ci_lower <- mean_val - margin_error
+  ci_upper <- mean_val + margin_error
+  
+  confidence_intervals[[feature]] <- data.frame(
+    Feature = feature,
+    Mean = mean_val,
+    CI_Lower = ci_lower,
+    CI_Upper = ci_upper,
+    Margin_of_Error = margin_error
+  )
+}
+
+ci_df <- do.call(rbind, confidence_intervals)
+print(ci_df, digits = 3)
+```
+
+## 4. Summary of Statistical Findings
+
+```{r summary}
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat("STATISTICAL ANALYSIS SUMMARY\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+cat("1. Descriptive Statistics:\n")
+cat("   - Dataset contains", nrow(data), "records with", ncol(data) - 1, "features\n")
+cat("   - Outcome distribution shows class imbalance\n")
+cat("   - Several features contain zeros that may represent missing data\n\n")
+
+cat("2. Inferential Statistics:\n")
+cat("   - T-tests reveal significant differences between diabetic and non-diabetic groups\n")
+cat("   - Glucose, BMI, and Age show strong correlations with Outcome\n")
+cat("   - Chi-square tests indicate associations between categorical variables and outcome\n\n")
+
+cat("3. Key Insights:\n")
+cat("   - Higher glucose levels are strongly associated with diabetes\n")
+cat("   - BMI and age are important predictors\n")
+cat("   - Data quality issues (zeros) need to be addressed\n")
+cat(paste(rep("=", 60), collapse = ""), "\n")
+```
+
