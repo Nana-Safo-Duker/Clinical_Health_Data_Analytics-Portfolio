@@ -1,0 +1,398 @@
+---
+title: "Pima Indians Diabetes Dataset - Exploratory Data Analysis"
+subtitle: "Comprehensive EDA: Univariate, Bivariate, and Multivariate Analysis"
+author: "Data Science Analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.width = 14, fig.height = 8)
+```
+
+```{r libraries}
+# Load necessary libraries
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(GGally)
+library(corrplot)
+library(VIM)
+library(gridExtra)
+library(RColorBrewer)
+```
+
+## 1. Load and Prepare Data
+
+```{r load-data}
+# Load the dataset
+data <- read.csv("../../data/pima-indians-diabetes.csv", skip = 9, header = FALSE)
+
+# Set column names
+colnames(data) <- c(
+  "Pregnancies",
+  "Glucose",
+  "BloodPressure",
+  "SkinThickness",
+  "Insulin",
+  "BMI",
+  "DiabetesPedigreeFunction",
+  "Age",
+  "Outcome"
+)
+
+# Convert Outcome to factor
+data$Outcome <- as.factor(data$Outcome)
+levels(data$Outcome) <- c("No Diabetes", "Diabetes")
+
+cat("Dataset Shape:", dim(data), "\n")
+head(data)
+```
+
+## 2. Univariate Analysis
+
+### 2.1 Distribution Analysis
+
+```{r univariate-distributions}
+# Univariate Analysis: Distribution of each feature
+numeric_features <- c("Pregnancies", "Glucose", "BloodPressure", "SkinThickness",
+                     "Insulin", "BMI", "DiabetesPedigreeFunction", "Age")
+
+# Create distribution plots
+plots <- list()
+for (i in 1:length(numeric_features)) {
+  feature <- numeric_features[i]
+  plots[[i]] <- ggplot(data, aes_string(x = feature)) +
+    geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7, color = "black") +
+    geom_vline(aes_string(xintercept = mean(data[[feature]], na.rm = TRUE)),
+               color = "red", linetype = "dashed", size = 1) +
+    geom_vline(aes_string(xintercept = median(data[[feature]], na.rm = TRUE)),
+               color = "green", linetype = "dashed", size = 1) +
+    labs(title = paste("Distribution of", feature),
+         x = feature, y = "Frequency") +
+    theme_minimal()
+}
+
+do.call(grid.arrange, c(plots, ncol = 4))
+```
+
+### 2.2 Box Plots
+
+```{r univariate-boxplots}
+# Box plots for univariate analysis
+plots <- list()
+for (i in 1:length(numeric_features)) {
+  feature <- numeric_features[i]
+  plots[[i]] <- ggplot(data, aes_string(y = feature)) +
+    geom_boxplot(fill = "lightblue", alpha = 0.7) +
+    labs(title = paste("Box Plot of", feature),
+         y = feature) +
+    theme_minimal()
+}
+
+do.call(grid.arrange, c(plots, ncol = 4))
+```
+
+### 2.3 Violin Plots
+
+```{r univariate-violin}
+# Violin plots for better distribution visualization
+plots <- list()
+for (i in 1:length(numeric_features)) {
+  feature <- numeric_features[i]
+  plots[[i]] <- ggplot(data, aes_string(y = feature)) +
+    geom_violin(fill = "lightgreen", alpha = 0.7) +
+    labs(title = paste("Violin Plot of", feature),
+         y = feature) +
+    theme_minimal()
+}
+
+do.call(grid.arrange, c(plots, ncol = 4))
+```
+
+### 2.4 Summary Statistics
+
+```{r univariate-summary}
+# Summary statistics for univariate analysis
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat("UNIVARIATE ANALYSIS SUMMARY\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+univariate_stats <- data.frame(
+  Feature = numeric_features,
+  Mean = sapply(numeric_features, function(x) mean(data[[x]], na.rm = TRUE)),
+  Median = sapply(numeric_features, function(x) median(data[[x]], na.rm = TRUE)),
+  Std = sapply(numeric_features, function(x) sd(data[[x]], na.rm = TRUE)),
+  Skewness = sapply(numeric_features, function(x) {
+    mean_val <- mean(data[[x]], na.rm = TRUE)
+    sd_val <- sd(data[[x]], na.rm = TRUE)
+    n <- sum(!is.na(data[[x]]))
+    sum((data[[x]] - mean_val)^3, na.rm = TRUE) / (n * sd_val^3)
+  }),
+  Kurtosis = sapply(numeric_features, function(x) {
+    mean_val <- mean(data[[x]], na.rm = TRUE)
+    sd_val <- sd(data[[x]], na.rm = TRUE)
+    n <- sum(!is.na(data[[x]]))
+    sum((data[[x]] - mean_val)^4, na.rm = TRUE) / (n * sd_val^4) - 3
+  }),
+  Min = sapply(numeric_features, function(x) min(data[[x]], na.rm = TRUE)),
+  Max = sapply(numeric_features, function(x) max(data[[x]], na.rm = TRUE)),
+  Q1 = sapply(numeric_features, function(x) quantile(data[[x]], 0.25, na.rm = TRUE)),
+  Q3 = sapply(numeric_features, function(x) quantile(data[[x]], 0.75, na.rm = TRUE))
+)
+
+print(univariate_stats, digits = 3)
+```
+
+## 3. Bivariate Analysis
+
+### 3.1 Feature vs Outcome Analysis
+
+```{r bivariate-boxplots}
+# Bivariate Analysis: Feature distributions by Outcome
+plots <- list()
+for (i in 1:length(numeric_features)) {
+  feature <- numeric_features[i]
+  plots[[i]] <- ggplot(data, aes_string(x = "Outcome", y = feature, fill = "Outcome")) +
+    geom_boxplot(alpha = 0.7) +
+    scale_fill_manual(values = c("skyblue", "salmon")) +
+    labs(title = paste(feature, "by Outcome"),
+         x = "Outcome", y = feature) +
+    theme_minimal() +
+    theme(legend.position = "none")
+}
+
+do.call(grid.arrange, c(plots, ncol = 4))
+```
+
+### 3.2 Density Plots by Outcome
+
+```{r bivariate-density}
+# Density plots by outcome
+plots <- list()
+for (i in 1:length(numeric_features)) {
+  feature <- numeric_features[i]
+  plots[[i]] <- ggplot(data, aes_string(x = feature, fill = "Outcome")) +
+    geom_density(alpha = 0.7) +
+    scale_fill_manual(values = c("skyblue", "salmon"),
+                     labels = c("No Diabetes", "Diabetes")) +
+    labs(title = paste(feature, "Distribution by Outcome"),
+         x = feature, y = "Density") +
+    theme_minimal()
+}
+
+do.call(grid.arrange, c(plots, ncol = 4))
+```
+
+### 3.3 Correlation with Outcome
+
+```{r bivariate-correlation}
+# Correlation with Outcome
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat("BIVARIATE ANALYSIS: CORRELATION WITH OUTCOME\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+# Convert Outcome back to numeric for correlation
+data_numeric <- data
+data_numeric$Outcome <- as.numeric(data_numeric$Outcome) - 1
+
+correlations <- cor(data_numeric[, c(numeric_features, "Outcome")], use = "complete.obs")[, "Outcome"]
+correlations <- correlations[names(correlations) != "Outcome"]
+correlations <- sort(correlations, decreasing = TRUE)
+
+print(correlations, digits = 3)
+
+# Visualize correlations
+correlation_df <- data.frame(
+  Feature = names(correlations),
+  Correlation = as.numeric(correlations)
+)
+
+ggplot(correlation_df, aes(x = reorder(Feature, Correlation), y = Correlation)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
+  coord_flip() +
+  labs(title = "Feature Correlations with Outcome",
+       x = "Feature", y = "Correlation Coefficient") +
+  theme_minimal()
+```
+
+### 3.4 Scatter Matrix
+
+```{r scatter-matrix}
+# Scatter matrix for key features
+key_features_subset <- c("Glucose", "BMI", "Age", "BloodPressure")
+key_data <- data_numeric[, c(key_features_subset, "Outcome")]
+
+ggpairs(key_data, columns = 1:length(key_features_subset),
+        mapping = ggplot2::aes(color = as.factor(Outcome)),
+        upper = list(continuous = wrap("cor", size = 3)),
+        lower = list(continuous = wrap("points", alpha = 0.6)),
+        title = "Scatter Matrix of Key Features")
+```
+
+## 4. Multivariate Analysis
+
+### 4.1 Correlation Heatmap
+
+```{r multivariate-heatmap}
+# Pairwise correlations heatmap
+correlation_matrix <- cor(data_numeric[, c(numeric_features, "Outcome")], use = "complete.obs")
+
+corrplot(correlation_matrix, method = "color", type = "upper", order = "hclust",
+         tl.cex = 0.8, tl.col = "black", tl.srt = 45,
+         addCoef.col = "black", number.cex = 0.7,
+         col = colorRampPalette(c("blue", "white", "red"))(200),
+         title = "Feature Correlation Heatmap", mar = c(0,0,2,0))
+```
+
+### 4.2 Principal Component Analysis (PCA)
+
+```{r pca-analysis}
+# PCA for dimensionality reduction and visualization
+library(stats)
+
+# Prepare data (handle zeros as missing values)
+data_clean <- data_numeric[, numeric_features]
+data_clean[data_clean == 0] <- NA
+for (col in numeric_features) {
+  data_clean[is.na(data_clean[[col]]), col] <- median(data_clean[[col]], na.rm = TRUE)
+}
+
+# Standardize features
+data_scaled <- scale(data_clean)
+
+# Apply PCA
+pca <- prcomp(data_scaled, center = FALSE, scale. = FALSE)
+
+# Explained variance
+explained_variance <- pca$sdev^2 / sum(pca$sdev^2)
+cumulative_variance <- cumsum(explained_variance)
+
+cat("Explained Variance by Component:\n")
+for (i in 1:length(explained_variance)) {
+  cat(sprintf("PC%d: %.4f (%.2f%%) - Cumulative: %.4f (%.2f%%)\n",
+              i, explained_variance[i], explained_variance[i]*100,
+              cumulative_variance[i], cumulative_variance[i]*100))
+}
+
+# Scree plot
+scree_df <- data.frame(
+  PC = 1:length(explained_variance),
+  Individual = explained_variance,
+  Cumulative = cumulative_variance
+)
+
+ggplot(scree_df, aes(x = PC)) +
+  geom_bar(aes(y = Individual), stat = "identity", fill = "steelblue", alpha = 0.7) +
+  geom_line(aes(y = Cumulative), color = "red", size = 1) +
+  geom_point(aes(y = Cumulative), color = "red", size = 2) +
+  labs(title = "PCA Scree Plot",
+       x = "Principal Component", y = "Explained Variance Ratio") +
+  theme_minimal()
+
+# PCA visualization (2D)
+pca_2d <- data.frame(
+  PC1 = pca$x[, 1],
+  PC2 = pca$x[, 2],
+  Outcome = data$Outcome
+)
+
+ggplot(pca_2d, aes(x = PC1, y = PC2, color = Outcome)) +
+  geom_point(alpha = 0.6, size = 2) +
+  scale_color_manual(values = c("skyblue", "salmon"),
+                    labels = c("No Diabetes", "Diabetes")) +
+  labs(title = "PCA 2D Visualization",
+       x = paste0("First Principal Component (Explained Variance: ",
+                 round(explained_variance[1]*100, 2), "%)"),
+       y = paste0("Second Principal Component (Explained Variance: ",
+                 round(explained_variance[2]*100, 2), "%)")) +
+  theme_minimal()
+
+cat(sprintf("\nTotal Explained Variance (First 2 PCs): %.2f%%\n",
+            sum(explained_variance[1:2])*100))
+```
+
+### 4.3 3D Scatter Plot
+
+```{r 3d-scatter}
+# 3D Scatter plot with top 3 features
+library(plotly)
+
+top_features <- c("Glucose", "BMI", "Age")
+plot_3d <- plot_ly(data, x = ~Glucose, y = ~BMI, z = ~Age,
+                   color = ~Outcome, colors = c("skyblue", "salmon"),
+                   marker = list(size = 3, opacity = 0.6)) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = top_features[1]),
+                     yaxis = list(title = top_features[2]),
+                     zaxis = list(title = top_features[3])),
+         title = "3D Scatter Plot: Glucose vs BMI vs Age (Colored by Outcome)")
+
+plot_3d
+```
+
+### 4.4 Outlier Detection
+
+```{r outlier-detection}
+# Outlier detection using IQR method
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat("OUTLIER DETECTION (IQR Method)\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+outliers_summary <- list()
+for (feature in numeric_features) {
+  Q1 <- quantile(data[[feature]], 0.25, na.rm = TRUE)
+  Q3 <- quantile(data[[feature]], 0.75, na.rm = TRUE)
+  IQR_val <- Q3 - Q1
+  lower_bound <- Q1 - 1.5 * IQR_val
+  upper_bound <- Q3 + 1.5 * IQR_val
+  outliers <- sum(data[[feature]] < lower_bound | data[[feature]] > upper_bound, na.rm = TRUE)
+  
+  outliers_summary[[feature]] <- data.frame(
+    Feature = feature,
+    Lower_Bound = lower_bound,
+    Upper_Bound = upper_bound,
+    Outlier_Count = outliers,
+    Outlier_Percentage = outliers / nrow(data) * 100
+  )
+}
+
+outliers_df <- do.call(rbind, outliers_summary)
+print(outliers_df, digits = 3)
+```
+
+## 5. EDA Summary
+
+```{r eda-summary}
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat("EXPLORATORY DATA ANALYSIS SUMMARY\n")
+cat(paste(rep("=", 60), collapse = ""), "\n\n")
+
+cat("1. UNIVARIATE ANALYSIS:\n")
+cat("   - Most features show right-skewed distributions\n")
+cat("   - Presence of zeros in several features (potential missing data)\n")
+cat("   - Wide ranges in features like Insulin and SkinThickness\n\n")
+
+cat("2. BIVARIATE ANALYSIS:\n")
+cat("   - Strong positive correlation: Glucose, BMI, Age with Outcome\n")
+cat("   - Clear separation between diabetic and non-diabetic groups for key features\n")
+cat("   - Glucose shows the strongest association with diabetes outcome\n\n")
+
+cat("3. MULTIVARIATE ANALYSIS:\n")
+cat("   - PCA reveals some clustering by outcome\n")
+cat("   - Multiple features contribute to diabetes prediction\n")
+cat("   - Some outliers present but may be valid clinical values\n\n")
+
+cat("4. KEY FINDINGS:\n")
+cat("   - Glucose is the most important predictor\n")
+cat("   - BMI and Age are significant factors\n")
+cat("   - Data quality issues need addressing (zero values)\n")
+cat(paste(rep("=", 60), collapse = ""), "\n")
+```
+
