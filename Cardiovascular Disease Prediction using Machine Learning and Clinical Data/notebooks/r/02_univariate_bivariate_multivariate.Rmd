@@ -1,0 +1,443 @@
+---
+title: "Univariate, Bivariate, and Multivariate Analysis"
+author: "Cardiovascular Disease Analysis"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, 
+                      fig.width = 12, fig.height = 6)
+```
+
+## Introduction
+
+This notebook contains comprehensive analysis including:
+- Univariate Analysis: Analysis of individual variables
+- Bivariate Analysis: Analysis of relationships between two variables
+- Multivariate Analysis: Analysis of relationships among multiple variables
+
+## Load Libraries and Data
+
+```{r load-libraries}
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(psych)
+library(Hmisc)
+library(car)
+library(gridExtra)
+library(factoextra)
+library(FactoMineR)
+
+# Set theme for plots
+theme_set(theme_minimal() + theme(plot.title = element_text(size = 14, face = "bold")))
+
+# Load the dataset
+df <- read.csv("../../data/Cardiovascular_Disease_Dataset.csv", stringsAsFactors = FALSE)
+
+cat("Dataset loaded successfully!\n")
+cat("Shape:", nrow(df), "rows,", ncol(df), "columns\n")
+head(df)
+```
+
+## 1. Univariate Analysis
+
+Univariate analysis involves examining each variable individually to understand its distribution, central tendency, dispersion, and other characteristics.
+
+### 1.1 Univariate Analysis for Numerical Variables
+
+```{r univariate-numerical}
+numerical_cols <- c("age", "restingBP", "serumcholestrol", "maxheartrate", "oldpeak")
+categorical_cols <- c("gender", "chestpain", "fastingbloodsugar", "restingrelectro", 
+                     "exerciseangia", "slope", "noofmajorvessels", "target")
+
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("UNIVARIATE ANALYSIS - NUMERICAL VARIABLES\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+for (col in numerical_cols) {
+  if (col %in% names(df)) {
+    cat("\n", toupper(col), ":\n")
+    cat("  Count:", sum(!is.na(df[[col]])), "\n")
+    cat("  Mean:", mean(df[[col]], na.rm = TRUE), "\n")
+    cat("  Median:", median(df[[col]], na.rm = TRUE), "\n")
+    cat("  Std Dev:", sd(df[[col]], na.rm = TRUE), "\n")
+    cat("  Variance:", var(df[[col]], na.rm = TRUE), "\n")
+    cat("  Min:", min(df[[col]], na.rm = TRUE), "\n")
+    cat("  Max:", max(df[[col]], na.rm = TRUE), "\n")
+    cat("  Range:", max(df[[col]], na.rm = TRUE) - min(df[[col]], na.rm = TRUE), "\n")
+    cat("  Q1:", quantile(df[[col]], 0.25, na.rm = TRUE), "\n")
+    cat("  Q3:", quantile(df[[col]], 0.75, na.rm = TRUE), "\n")
+    cat("  IQR:", IQR(df[[col]], na.rm = TRUE), "\n")
+    cat("  Skewness:", psych::skew(df[[col]], na.rm = TRUE), "\n")
+    cat("  Kurtosis:", psych::kurtosi(df[[col]], na.rm = TRUE), "\n")
+    
+    # Outlier detection using IQR method
+    Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
+    Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
+    IQR_val <- Q3 - Q1
+    lower_bound <- Q1 - 1.5 * IQR_val
+    upper_bound <- Q3 + 1.5 * IQR_val
+    outliers <- df[df[[col]] < lower_bound | df[[col]] > upper_bound, ]
+    cat("  Outliers (IQR method):", nrow(outliers), "(", round(nrow(outliers)/nrow(df)*100, 2), "%)\n")
+  }
+}
+```
+
+### 1.2 Visualizations for Univariate Analysis - Numerical Variables
+
+```{r univariate-visualizations}
+# Create comprehensive univariate visualizations
+plots_list <- list()
+
+for (col in numerical_cols) {
+  if (col %in% names(df)) {
+    # Histogram
+    p1 <- ggplot(df, aes_string(x = col)) +
+      geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7, color = "black") +
+      geom_vline(aes_string(xintercept = mean(df[[col]], na.rm = TRUE)), 
+                 color = "red", linetype = "dashed", size = 1) +
+      geom_vline(aes_string(xintercept = median(df[[col]], na.rm = TRUE)), 
+                 color = "green", linetype = "dashed", size = 1) +
+      labs(title = paste("Histogram:", col),
+           x = col,
+           y = "Frequency") +
+      theme_minimal()
+    
+    # Box Plot
+    p2 <- ggplot(df, aes_string(y = col)) +
+      geom_boxplot(fill = "lightblue", alpha = 0.7) +
+      labs(title = paste("Box Plot:", col),
+           y = col) +
+      theme_minimal()
+    
+    # Q-Q Plot
+    p3 <- ggplot(df, aes_string(sample = col)) +
+      stat_qq() +
+      stat_qq_line() +
+      labs(title = paste("Q-Q Plot:", col)) +
+      theme_minimal()
+    
+    plots_list[[paste0(col, "_hist")]] <- p1
+    plots_list[[paste0(col, "_box")]] <- p2
+    plots_list[[paste0(col, "_qq")]] <- p3
+  }
+}
+
+# Display first few plots
+do.call(grid.arrange, c(plots_list[1:9], ncol = 3))
+```
+
+### 1.3 Univariate Analysis for Categorical Variables
+
+```{r univariate-categorical}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("UNIVARIATE ANALYSIS - CATEGORICAL VARIABLES\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+for (col in categorical_cols) {
+  if (col %in% names(df)) {
+    cat("\n", toupper(col), ":\n")
+    value_counts <- table(df[[col]])
+    print(value_counts)
+    cat("\n  Percentage distribution:\n")
+    for (val in names(value_counts)) {
+      cat("    ", val, ":", value_counts[val], "(", round(value_counts[val]/nrow(df)*100, 2), "%)\n")
+    }
+    cat("  Mode:", names(sort(value_counts, decreasing = TRUE))[1], "\n")
+    cat("  Unique values:", length(unique(df[[col]])), "\n")
+  }
+}
+```
+
+### 1.4 Visualizations for Categorical Variables
+
+```{r categorical-visualizations}
+categorical_for_vis <- c("gender", "chestpain", "fastingbloodsugar", "exerciseangia", "target")
+plots_cat <- list()
+
+for (col in categorical_for_vis) {
+  if (col %in% names(df)) {
+    value_counts <- table(df[[col]])
+    p <- ggplot(df, aes_string(x = paste0("factor(", col, ")"))) +
+      geom_bar(fill = "coral", alpha = 0.7, color = "black") +
+      labs(title = paste("Bar Chart:", col),
+           x = col,
+           y = "Count") +
+      theme_minimal() +
+      geom_text(stat = "count", aes(label = ..count..), vjust = -0.5, size = 3)
+    plots_cat[[col]] <- p
+  }
+}
+
+do.call(grid.arrange, c(plots_cat, ncol = 2))
+```
+
+## 2. Bivariate Analysis
+
+Bivariate analysis involves examining the relationship between two variables.
+
+### 2.1 Correlation Analysis - Numerical vs Numerical
+
+```{r correlation-analysis}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("BIVARIATE ANALYSIS - CORRELATION BETWEEN NUMERICAL VARIABLES\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+correlation_matrix <- cor(df[numerical_cols], use = "complete.obs")
+cat("\nCorrelation Matrix:\n")
+print(round(correlation_matrix, 3))
+
+# Visualize correlation matrix
+corrplot(correlation_matrix, method = "color", type = "upper", 
+         order = "hclust", tl.cex = 0.8, tl.col = "black",
+         addCoef.col = "black", number.cex = 0.7)
+```
+
+### 2.2 Scatter Plots for Numerical Variables vs Target
+
+```{r scatter-plots}
+plots_scatter <- list()
+for (col in numerical_cols) {
+  if (col %in% names(df)) {
+    p <- ggplot(df, aes_string(x = col, y = "target", color = "factor(target)")) +
+      geom_point(alpha = 0.5) +
+      scale_color_manual(values = c("skyblue", "coral"), labels = c("No Disease", "Disease")) +
+      labs(title = paste(col, "vs Target"),
+           x = col,
+           y = "Target",
+           color = "Target") +
+      theme_minimal()
+    plots_scatter[[col]] <- p
+  }
+}
+
+do.call(grid.arrange, c(plots_scatter, ncol = 2))
+```
+
+### 2.3 Numerical vs Categorical (Target) - Group Comparisons
+
+```{r numerical-vs-target}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("BIVARIATE ANALYSIS - NUMERICAL VARIABLES VS TARGET\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+for (col in numerical_cols) {
+  if (col %in% names(df)) {
+    cat("\n", toupper(col), "by Target:\n")
+    grouped <- df %>%
+      group_by(target) %>%
+      summarise(
+        mean = mean(.data[[col]], na.rm = TRUE),
+        median = median(.data[[col]], na.rm = TRUE),
+        sd = sd(.data[[col]], na.rm = TRUE),
+        min = min(.data[[col]], na.rm = TRUE),
+        max = max(.data[[col]], na.rm = TRUE)
+      )
+    print(grouped)
+    
+    # Statistical test
+    group_0 <- df[df$target == 0, col]
+    group_1 <- df[df$target == 1, col]
+    test_result <- t.test(group_0, group_1)
+    cat("  t-test p-value:", test_result$p.value, 
+        ifelse(test_result$p.value < 0.05, "(Significant)", "(Not significant)"), "\n")
+  }
+}
+```
+
+### 2.4 Categorical vs Categorical - Cross-tabulation and Chi-square Tests
+
+```{r categorical-vs-target}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("BIVARIATE ANALYSIS - CATEGORICAL VARIABLES VS TARGET\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+categorical_vars <- c("gender", "chestpain", "fastingbloodsugar", "restingrelectro", 
+                     "exerciseangia", "slope", "noofmajorvessels")
+
+for (var in categorical_vars) {
+  if (var %in% names(df)) {
+    cat("\n", toupper(var), "vs TARGET:\n")
+    crosstab <- table(df[[var]], df$target)
+    print(addmargins(crosstab))
+    
+    # Chi-square test
+    contingency_table <- table(df[[var]], df$target)
+    test_result <- chisq.test(contingency_table)
+    cat("  Chi-square statistic:", test_result$statistic, "\n")
+    cat("  p-value:", test_result$p.value, "\n")
+    cat("  Significant association:", ifelse(test_result$p.value < 0.05, "Yes", "No"), "(α = 0.05)\n")
+    
+    # Percentage distribution
+    cat("\n  Percentage by Target:\n")
+    crosstab_pct <- prop.table(table(df[[var]], df$target), margin = 1) * 100
+    print(round(crosstab_pct, 2))
+  }
+}
+```
+
+### 2.5 Violin Plots for Numerical Variables by Target
+
+```{r violin-plots}
+plots_violin <- list()
+for (col in numerical_cols) {
+  if (col %in% names(df)) {
+    p <- ggplot(df, aes_string(x = "factor(target)", y = col, fill = "factor(target)")) +
+      geom_violin(alpha = 0.7) +
+      geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
+      scale_fill_manual(values = c("skyblue", "coral"), labels = c("No Disease", "Disease")) +
+      labs(title = paste(col, "by Target"),
+           x = "Target",
+           y = col,
+           fill = "Target") +
+      theme_minimal() +
+      theme(legend.position = "none")
+    plots_violin[[col]] <- p
+  }
+}
+
+do.call(grid.arrange, c(plots_violin, ncol = 2))
+```
+
+## 3. Multivariate Analysis
+
+Multivariate analysis involves examining relationships among multiple variables simultaneously.
+
+### 3.1 Pairplot for Multivariate Relationships
+
+```{r pairplot}
+# Create a pairplot using GGally
+library(GGally)
+
+key_vars <- c("age", "restingBP", "maxheartrate", "oldpeak", "target")
+sample_df <- df[sample(nrow(df), min(500, nrow(df))), key_vars]
+sample_df$target <- factor(sample_df$target)
+
+ggpairs(sample_df, columns = 1:(ncol(sample_df)-1), 
+        aes(color = target, alpha = 0.6),
+        title = "Pair Plot of Numerical Variables by Target")
+```
+
+### 3.2 Principal Component Analysis (PCA)
+
+```{r pca}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("MULTIVARIATE ANALYSIS - PRINCIPAL COMPONENT ANALYSIS (PCA)\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+# Prepare data for PCA
+X <- df[numerical_cols]
+X <- X[complete.cases(X), ]
+X_scaled <- scale(X)
+
+# Perform PCA
+pca_result <- prcomp(X_scaled, center = FALSE, scale. = FALSE)
+
+# Explained variance
+explained_variance <- summary(pca_result)$importance[2, ]
+cumulative_variance <- summary(pca_result)$importance[3, ]
+
+cat("\nExplained Variance by Component:\n")
+for (i in 1:length(explained_variance)) {
+  cat("  PC", i, ":", explained_variance[i], "(", explained_variance[i]*100, "%) - Cumulative:", 
+      cumulative_variance[i], "(", cumulative_variance[i]*100, "%)\n")
+}
+
+# Scree plot
+fviz_eig(pca_result, addlabels = TRUE, ylim = c(0, 50))
+
+# Plot first two principal components
+X_pca <- as.data.frame(pca_result$x[, 1:2])
+X_pca$target <- df[complete.cases(df[numerical_cols]), "target"]
+
+ggplot(X_pca, aes(x = PC1, y = PC2, color = factor(target))) +
+  geom_point(alpha = 0.6) +
+  scale_color_manual(values = c("skyblue", "coral"), labels = c("No Disease", "Disease")) +
+  labs(title = "PCA: First Two Principal Components",
+       x = paste0("PC1 (", round(explained_variance[1]*100, 2), "% variance)"),
+       y = paste0("PC2 (", round(explained_variance[2]*100, 2), "% variance)"),
+       color = "Target") +
+  theme_minimal()
+
+cat("\nFirst two principal components explain", cumulative_variance[2]*100, "% of variance\n")
+```
+
+### 3.3 Feature Importance Based on Correlation with Target
+
+```{r feature-importance}
+cat(paste(rep("=", 80), collapse = ""), "\n")
+cat("FEATURE IMPORTANCE - CORRELATION WITH TARGET\n")
+cat(paste(rep("=", 80), collapse = ""), "\n")
+
+feature_importance <- data.frame(
+  Feature = character(),
+  Importance = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (col in numerical_cols) {
+  if (col %in% names(df)) {
+    correlation <- cor(df[[col]], df$target, use = "complete.obs")
+    feature_importance <- rbind(feature_importance, 
+                               data.frame(Feature = col, Importance = abs(correlation)))
+  }
+}
+
+# Sort by importance
+feature_importance <- feature_importance[order(-feature_importance$Importance), ]
+
+cat("\nFeature Importance (absolute correlation with target):\n")
+print(feature_importance)
+
+# Visualize feature importance
+ggplot(feature_importance, aes(x = reorder(Feature, Importance), y = Importance)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
+  coord_flip() +
+  labs(title = "Feature Importance Based on Correlation with Target",
+       x = "Feature",
+       y = "Absolute Correlation with Target") +
+  theme_minimal()
+```
+
+### 3.4 Multivariate Correlation Heatmap with Target
+
+```{r multivariate-correlation}
+# Multivariate correlation heatmap
+numerical_cols_with_target <- c(numerical_cols, "target")
+correlation_with_target <- cor(df[numerical_cols_with_target], use = "complete.obs")
+
+corrplot(correlation_with_target, method = "color", type = "upper", 
+         order = "hclust", tl.cex = 0.8, tl.col = "black",
+         addCoef.col = "black", number.cex = 0.7,
+         title = "Multivariate Correlation Matrix (Including Target)")
+```
+
+## 4. Key Findings
+
+### Univariate Analysis:
+- Distribution characteristics of each variable
+- Identification of outliers
+- Central tendency and dispersion measures
+- Normality assessment
+
+### Bivariate Analysis:
+- Correlation between numerical variables
+- Relationships between variables and target
+- Statistical significance of associations
+- Group differences
+
+### Multivariate Analysis:
+- Principal component analysis reveals data structure
+- Feature importance ranking
+- Multivariate relationships and interactions
+- Dimensionality reduction insights
