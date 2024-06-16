@@ -1,0 +1,199 @@
+---
+title: "Comprehensive Exploratory Data Analysis (EDA)"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Objectives
+- Data quality assessment
+- Missing value analysis
+- Outlier detection
+- Distribution analysis
+- Relationship exploration
+- Temporal pattern analysis
+
+```{r load-libraries}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(lubridate)
+library(gridExtra)
+library(VIM)
+```
+
+```{r load-data}
+df <- read.csv("../../data/mock_treatment_starts_2016.csv", stringsAsFactors = FALSE)
+df$TreatmentStart <- as.Date(df$TreatmentStart, format = "%m/%d/%y")
+df$Year <- year(df$TreatmentStart)
+df$Month <- month(df$TreatmentStart)
+df$Day <- day(df$TreatmentStart)
+df$MonthName <- month.name[df$Month]
+df$Weekday <- weekdays(df$TreatmentStart)
+df$Quarter <- quarter(df$TreatmentStart)
+
+cat("Dataset shape:", dim(df), "\n")
+cat("Date range:", min(df$TreatmentStart), "to", max(df$TreatmentStart), "\n")
+head(df)
+```
+
+## 1. Data Quality Assessment
+
+```{r data-quality}
+cat("Missing values:\n")
+print(colSums(is.na(df)))
+
+# Outlier detection
+Q1 <- quantile(df$Dosage, 0.25)
+Q3 <- quantile(df$Dosage, 0.75)
+IQR_val <- IQR(df$Dosage)
+outliers <- df[df$Dosage < (Q1 - 1.5*IQR_val) | df$Dosage > (Q3 + 1.5*IQR_val), ]
+cat("\nOutliers detected:", nrow(outliers), "\n")
+if (nrow(outliers) > 0) {
+  print(outliers[, c("PatientID", "Drug", "Dosage")])
+}
+```
+
+## 2. Descriptive Statistics
+
+```{r descriptive}
+cat("Dosage Statistics:\n")
+summary(df$Dosage)
+cat("\nSkewness:", moments::skewness(df$Dosage), "\n")
+cat("Kurtosis:", moments::kurtosis(df$Dosage), "\n")
+
+cat("\nDrug Distribution:\n")
+print(table(df$Drug))
+cat("\nProportions:\n")
+print(prop.table(table(df$Drug)) * 100)
+```
+
+## 3. Distribution Analysis
+
+```{r distributions}
+p1 <- ggplot(df, aes(x = Dosage)) +
+  geom_histogram(bins = 15, fill = "steelblue", alpha = 0.7, color = "black") +
+  geom_vline(aes(xintercept = mean(Dosage)), color = "red", linetype = "dashed") +
+  labs(title = "Histogram: Dosage Distribution") + theme_minimal()
+
+p2 <- ggplot(df, aes(x = Dosage)) +
+  geom_density(color = "purple") +
+  labs(title = "Density Plot: Dosage") + theme_minimal()
+
+p3 <- ggplot(df, aes(sample = Dosage)) +
+  stat_qq() + stat_qq_line() +
+  labs(title = "Q-Q Plot: Normality Check") + theme_minimal()
+
+p4 <- ggplot(df, aes(x = Drug, y = Dosage)) +
+  geom_violin() +
+  labs(title = "Violin Plot: Dosage by Drug") + theme_minimal()
+
+grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
+```
+
+## 4. Temporal Pattern Analysis
+
+```{r temporal}
+month_order <- month.name[1:6]
+monthly_counts <- df %>% 
+  group_by(MonthName) %>% 
+  summarise(Count = n()) %>% 
+  arrange(match(MonthName, month_order))
+
+p1 <- ggplot(monthly_counts, aes(x = MonthName, y = Count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Treatment Starts by Month", x = "Month", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+mean_dosage_month <- df %>% 
+  group_by(MonthName) %>% 
+  summarise(Mean_Dosage = mean(Dosage)) %>% 
+  arrange(match(MonthName, month_order))
+
+p2 <- ggplot(mean_dosage_month, aes(x = MonthName, y = Mean_Dosage)) +
+  geom_line(group = 1, color = "teal", size = 1) +
+  geom_point(color = "teal", size = 3) +
+  labs(title = "Mean Dosage by Month", x = "Month", y = "Mean Dosage") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+grid.arrange(p1, p2, nrow = 1, ncol = 2)
+```
+
+## 5. Relationship Analysis
+
+```{r relationships}
+p1 <- ggplot(df, aes(x = Drug, y = Dosage)) +
+  geom_boxplot() +
+  labs(title = "Dosage Distribution by Drug") + theme_minimal()
+
+df_encoded <- df
+df_encoded$Drug_encoded <- ifelse(df_encoded$Drug == "Cisplatin", 0, 1)
+corr_matrix <- cor(df_encoded[, c("Dosage", "Drug_encoded", "Month")])
+
+p2 <- corrplot(corr_matrix, method = "color", type = "upper", 
+               addCoef.col = "black", tl.col = "black", tl.srt = 45,
+               title = "Correlation Matrix")
+
+drug_month <- table(df$MonthName, df$Drug)
+p3 <- ggplot(as.data.frame(drug_month), aes(x = Var1, y = Var2, fill = Freq)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red") +
+  labs(title = "Drug Usage by Month", x = "Month", y = "Drug", fill = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p4 <- ggplot(df_encoded, aes(x = Month, y = Dosage, color = factor(Drug_encoded))) +
+  geom_point(alpha = 0.6, size = 3) +
+  scale_color_manual(values = c("0" = "blue", "1" = "red"), 
+                     labels = c("0" = "Cisplatin", "1" = "Nivolumab")) +
+  labs(title = "Dosage vs Month (colored by Drug)", 
+       x = "Month", y = "Dosage", color = "Drug") + theme_minimal()
+
+grid.arrange(p1, p4, nrow = 1, ncol = 2)
+```
+
+## 6. Summary and Insights
+
+```{r summary}
+cat("=" %+% rep("=", 59), "\n")
+cat("EDA SUMMARY AND INSIGHTS\n")
+cat("=" %+% rep("=", 59), "\n")
+
+cat("\n1. Dataset Overview:\n")
+cat("   - Total records:", nrow(df), "\n")
+cat("   - Unique patients:", length(unique(df$PatientID)), "\n")
+cat("   - Date range:", min(df$TreatmentStart), "to", max(df$TreatmentStart), "\n")
+
+cat("\n2. Drug Distribution:\n")
+drug_counts <- table(df$Drug)
+for (i in 1:length(drug_counts)) {
+  cat("   -", names(drug_counts)[i], ":", drug_counts[i], 
+      "treatments (", round(drug_counts[i]/nrow(df)*100, 1), "%)\n")
+}
+
+cat("\n3. Dosage Statistics:\n")
+cat("   - Mean:", mean(df$Dosage), "\n")
+cat("   - Median:", median(df$Dosage), "\n")
+cat("   - Std Dev:", sd(df$Dosage), "\n")
+cat("   - Range:", min(df$Dosage), "-", max(df$Dosage), "\n")
+
+cat("\n4. Data Quality:\n")
+cat("   - Missing values:", sum(is.na(df)), "\n")
+cat("   - Outliers detected:", nrow(outliers), "\n")
+
+cat("\n5. Key Findings:\n")
+cat("   - Dataset contains treatment starts for two drugs: Cisplatin and Nivolumab\n")
+cat("   - Some patients have multiple treatment records\n")
+cat("   - Dosage varies significantly between drugs\n")
+cat("   - Treatment patterns show temporal variations\n")
+```
+
+```{r helper}
+`%+%` <- function(a, b) paste0(a, b)
+```
+
+
