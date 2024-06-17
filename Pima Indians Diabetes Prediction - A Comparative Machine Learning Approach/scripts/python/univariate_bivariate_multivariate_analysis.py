@@ -17,9 +17,18 @@ warnings.filterwarnings('ignore')
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (14, 8)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "pima-indians-diabetes.csv"
+OUTPUTS = ROOT / "outputs"
+OUTPUTS.mkdir(parents=True, exist_ok=True)
+OUTPUTS_DIR = str(OUTPUTS) + "/"
+
 def load_data():
     """Load and prepare the dataset"""
-    df = pd.read_csv('../../data/pima-indians-diabetes.csv', skiprows=9, header=None)
+    df = pd.read_csv(DATA, skiprows=9, header=None)
     columns = [
         'Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness',
         'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome'
@@ -27,7 +36,7 @@ def load_data():
     df.columns = columns
     return df
 
-def univariate_analysis(df, output_dir='../../outputs/'):
+def univariate_analysis(df, output_dir=OUTPUTS_DIR):
     """Perform univariate analysis on each feature"""
     print("=" * 80)
     print("UNIVARIATE ANALYSIS")
@@ -111,7 +120,7 @@ def univariate_analysis(df, output_dir='../../outputs/'):
     
     return univariate_stats, normality_df
 
-def bivariate_analysis(df, output_dir='../../outputs/'):
+def bivariate_analysis(df, output_dir=OUTPUTS_DIR):
     """Perform bivariate analysis between features and outcome"""
     print("\n" + "=" * 80)
     print("BIVARIATE ANALYSIS")
@@ -199,7 +208,7 @@ def bivariate_analysis(df, output_dir='../../outputs/'):
     
     return outcome_correlations, ttest_df
 
-def multivariate_analysis(df, output_dir='../../outputs/'):
+def multivariate_analysis(df, output_dir=OUTPUTS_DIR):
     """Perform multivariate analysis"""
     print("\n" + "=" * 80)
     print("MULTIVARIATE ANALYSIS")
@@ -310,7 +319,7 @@ def main():
     
     # Create output directory
     import os
-    os.makedirs('../../outputs', exist_ok=True)
+    OUTPUTS.mkdir(parents=True, exist_ok=True)
     
     # Load data
     df = load_data()
