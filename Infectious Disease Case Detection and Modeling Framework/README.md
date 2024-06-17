@@ -166,6 +166,23 @@ source("scripts/r/ml_models.R")
 
 (To be updated after analysis completion)
 
+
+## Visualizations
+
+Showcase figures are stored in `docs/images/`:
+
+### incidence distribution
+
+![incidence distribution](docs/images/incidence_distribution.png)
+
+### model comparison
+
+![model comparison](docs/images/model_comparison.png)
+
+### predicted vs actual
+
+![predicted vs actual](docs/images/predicted_vs_actual.png)
+
 ## Contributing
 
 This is a research project. For contributions, please:

@@ -1,23 +1,30 @@
 """
 Data Loading and Preprocessing Module
 """
+import os
 import pandas as pd
 import numpy as np
 
-def load_data(file_path='../data/incd.csv'):
+def load_data(file_path=None):
     """
     Load the cancer incidence dataset with proper encoding handling
     
     Parameters:
     -----------
     file_path : str
-        Path to the CSV file
+        Path to the CSV file. If not provided, resolves the bundled
+        dataset relative to this script's location so the function
+        works regardless of the current working directory.
         
     Returns:
     --------
     df : DataFrame
         Loaded dataset
     """
+    if file_path is None:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(script_dir, '..', '..', 'data', 'incd.csv')
+
     try:
         df = pd.read_csv(file_path, encoding='utf-8')
     except UnicodeDecodeError:
@@ -53,19 +60,28 @@ def clean_data(df):
     
     # Map columns dynamically
     for col in df.columns:
-        if 'Age-Adjusted' in col or 'Incidence' in col:
+        # Note: the "Recent 5-Year Trend ... in Incidence Rates" column also
+        # contains the substrings "Incidence" and "Rate", so it must be
+        # excluded here (via the "Trend" check) or it gets misclassified as
+        # the main Incidence_Rate column instead of Trend_5yr below.
+        if ('Age-Adjusted' in col or 'Incidence' in col) and 'Trend' not in col:
             if 'Rate' in col:
                 column_mapping[col] = 'Incidence_Rate'
         elif 'Lower' in col and '95' in col and 'Confidence' in col:
-            if 'Trend' not in col:
-                column_mapping[col] = 'CI_Lower'
-            else:
+            # The dataset has two "Lower 95% Confidence Interval" columns: one for
+            # the incidence rate and one for the 5-year trend. Pandas disambiguates
+            # the duplicate header by appending ".1" to the second occurrence, so
+            # use that suffix (rather than an absent "Trend" substring) to tell
+            # them apart and avoid mapping both to the same column name.
+            if col.endswith('.1'):
                 column_mapping[col] = 'Trend_CI_Lower'
-        elif 'Upper' in col and '95' in col and 'Confidence' in col:
-            if 'Trend' not in col:
-                column_mapping[col] = 'CI_Upper'
             else:
+                column_mapping[col] = 'CI_Lower'
+        elif 'Upper' in col and '95' in col and 'Confidence' in col:
+            if col.endswith('.1'):
                 column_mapping[col] = 'Trend_CI_Upper'
+            else:
+                column_mapping[col] = 'CI_Upper'
         elif 'Average' in col and 'Annual' in col:
             column_mapping[col] = 'Annual_Count'
         elif 'Recent' in col and 'Trend' in col and '5-Year' not in col:
