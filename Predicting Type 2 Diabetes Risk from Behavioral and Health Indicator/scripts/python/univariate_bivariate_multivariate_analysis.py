@@ -15,12 +15,24 @@ warnings.filterwarnings('ignore')
 sns.set_style('whitegrid')
 plt.rcParams['figure.figsize'] = (14, 8)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "diabetes_binary_health_indicators_BRFSS2021.csv"
+RESULTS = ROOT / "results"
+FIGURES = RESULTS / "figures"
+MODELS = RESULTS / "models"
+FIGURES.mkdir(parents=True, exist_ok=True)
+MODELS.mkdir(parents=True, exist_ok=True)
+FIGURES_DIR = str(FIGURES) + "/"
+
 def load_data():
     """Load the dataset"""
-    df = pd.read_csv('../../data/diabetes_binary_health_indicators_BRFSS2021.csv')
+    df = pd.read_csv(DATA)
     return df
 
-def univariate_analysis(df, numerical_cols, output_dir='../../results/figures/'):
+def univariate_analysis(df, numerical_cols, output_dir=FIGURES_DIR):
     """Perform univariate analysis"""
     print("=" * 60)
     print("UNIVARIATE ANALYSIS")
@@ -68,7 +80,7 @@ def univariate_analysis(df, numerical_cols, output_dir='../../results/figures/')
     
     return summary_df
 
-def bivariate_analysis(df, numerical_cols, output_dir='../../results/figures/'):
+def bivariate_analysis(df, numerical_cols, output_dir=FIGURES_DIR):
     """Perform bivariate analysis"""
     print("=" * 60)
     print("BIVARIATE ANALYSIS")
@@ -110,7 +122,7 @@ def bivariate_analysis(df, numerical_cols, output_dir='../../results/figures/'):
     
     return corr_df
 
-def multivariate_analysis(df, numerical_cols, output_dir='../../results/figures/'):
+def multivariate_analysis(df, numerical_cols, output_dir=FIGURES_DIR):
     """Perform multivariate analysis"""
     print("=" * 60)
     print("MULTIVARIATE ANALYSIS")

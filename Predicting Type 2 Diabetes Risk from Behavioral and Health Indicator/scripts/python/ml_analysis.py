@@ -21,9 +21,21 @@ warnings.filterwarnings('ignore')
 sns.set_style('whitegrid')
 plt.rcParams['figure.figsize'] = (12, 8)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "diabetes_binary_health_indicators_BRFSS2021.csv"
+RESULTS = ROOT / "results"
+FIGURES = RESULTS / "figures"
+MODELS = RESULTS / "models"
+FIGURES.mkdir(parents=True, exist_ok=True)
+MODELS.mkdir(parents=True, exist_ok=True)
+FIGURES_DIR = str(FIGURES) + "/"
+
 def load_data():
     """Load and prepare data"""
-    df = pd.read_csv('../../data/diabetes_binary_health_indicators_BRFSS2021.csv')
+    df = pd.read_csv(DATA)
     return df
 
 def prepare_data(df):
@@ -104,7 +116,7 @@ def train_models(X_train, X_test, X_train_scaled, X_test_scaled, y_train, y_test
     
     return results
 
-def plot_results(results, y_test, output_dir='../../results/figures/'):
+def plot_results(results, y_test, output_dir=FIGURES_DIR):
     """Plot model results"""
     # ROC Curves
     plt.figure(figsize=(10, 8))
@@ -160,7 +172,7 @@ def plot_results(results, y_test, output_dir='../../results/figures/'):
     
     return metrics_df
 
-def feature_importance_analysis(results, X_train, output_dir='../../results/figures/'):
+def feature_importance_analysis(results, X_train, output_dir=FIGURES_DIR):
     """Analyze feature importance for tree-based models"""
     print("=" * 60)
     print("FEATURE IMPORTANCE ANALYSIS")
@@ -212,7 +224,7 @@ def feature_importance_analysis(results, X_train, output_dir='../../results/figu
         plt.savefig(f'{output_dir}feature_importance_gb.png', dpi=300, bbox_inches='tight')
         plt.close()
 
-def confusion_matrix_plots(results, y_test, output_dir='../../results/figures/'):
+def confusion_matrix_plots(results, y_test, output_dir=FIGURES_DIR):
     """Plot confusion matrices for all models"""
     fig, axes = plt.subplots(2, 2, figsize=(12, 10))
     axes = axes.ravel()
@@ -250,7 +262,7 @@ def main():
     confusion_matrix_plots(results, y_test)
     
     # Save results
-    metrics_df.to_csv('../../results/models/model_performance.csv')
+    metrics_df.to_csv(MODELS / 'model_performance.csv')
     
     print("\n" + "=" * 60)
     print("MACHINE LEARNING ANALYSIS COMPLETE")

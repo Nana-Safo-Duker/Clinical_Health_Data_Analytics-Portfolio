@@ -15,9 +15,21 @@ warnings.filterwarnings('ignore')
 sns.set_style('whitegrid')
 plt.rcParams['figure.figsize'] = (14, 8)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "diabetes_binary_health_indicators_BRFSS2021.csv"
+RESULTS = ROOT / "results"
+FIGURES = RESULTS / "figures"
+MODELS = RESULTS / "models"
+FIGURES.mkdir(parents=True, exist_ok=True)
+MODELS.mkdir(parents=True, exist_ok=True)
+FIGURES_DIR = str(FIGURES) + "/"
+
 def load_data():
     """Load the dataset"""
-    df = pd.read_csv('../../data/diabetes_binary_health_indicators_BRFSS2021.csv')
+    df = pd.read_csv(DATA)
     return df
 
 def data_overview(df):
@@ -88,7 +100,7 @@ def descriptive_statistics(df):
     
     return desc_stats, additional_stats
 
-def target_variable_analysis(df, output_dir='../../results/figures/'):
+def target_variable_analysis(df, output_dir=FIGURES_DIR):
     """Analyze target variable"""
     print("=" * 60)
     print("TARGET VARIABLE ANALYSIS")
@@ -123,7 +135,7 @@ def target_variable_analysis(df, output_dir='../../results/figures/'):
     
     return target_dist, target_prop
 
-def feature_distributions(df, output_dir='../../results/figures/'):
+def feature_distributions(df, output_dir=FIGURES_DIR):
     """Visualize feature distributions"""
     print("=" * 60)
     print("FEATURE DISTRIBUTIONS")
@@ -151,7 +163,7 @@ def feature_distributions(df, output_dir='../../results/figures/'):
     plt.savefig(f'{output_dir}feature_distributions.png', dpi=300, bbox_inches='tight')
     plt.close()
 
-def correlation_analysis(df, output_dir='../../results/figures/'):
+def correlation_analysis(df, output_dir=FIGURES_DIR):
     """Comprehensive correlation analysis"""
     print("=" * 60)
     print("CORRELATION ANALYSIS")
@@ -186,7 +198,7 @@ def correlation_analysis(df, output_dir='../../results/figures/'):
     
     return correlation_matrix, diabetes_corr
 
-def categorical_analysis(df, output_dir='../../results/figures/'):
+def categorical_analysis(df, output_dir=FIGURES_DIR):
     """Analyze categorical variables"""
     print("=" * 60)
     print("CATEGORICAL VARIABLE ANALYSIS")

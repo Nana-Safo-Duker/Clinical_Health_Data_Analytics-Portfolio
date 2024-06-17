@@ -9,7 +9,7 @@ This project provides a comprehensive analysis of the Diabetes Binary Health Ind
 - **Dataset**: Diabetes Binary Health Indicators - BRFSS 2021
 - **Source**: Behavioral Risk Factor Surveillance System (BRFSS)
 - **Year**: 2021
-- **Records**: 236,380
+- **Records**: 236,378
 - **Features**: 22 (including target variable)
 - **Target Variable**: Diabetes_binary (0 = No diabetes, 1 = Diabetes)
 
@@ -200,7 +200,7 @@ jupyter notebook notebooks/r/01_statistical_analysis.ipynb
 ## Key Findings
 
 ### Dataset Characteristics
-- **Total Records**: 236,380
+- **Total Records**: 236,378
 - **Features**: 22
 - **Diabetes Prevalence**: ~13-15% (varies by analysis)
 - **Missing Values**: Minimal to none
@@ -227,6 +227,31 @@ Based on the analysis, the following factors show strong associations with diabe
 All results are saved in the `results/` directory:
 - **Figures**: Visualizations and plots saved as PNG files
 - **Models**: Trained models and performance metrics saved as CSV files
+
+
+## Visualizations
+
+Showcase figures are stored in `docs/images/`:
+
+### class distribution
+
+![class distribution](docs/images/class_distribution.png)
+
+### model comparison
+
+![model comparison](docs/images/model_comparison.png)
+
+### roc curves
+
+![roc curves](docs/images/roc_curves.png)
+
+### confusion matrix
+
+![confusion matrix](docs/images/confusion_matrix.png)
+
+### feature importance
+
+![feature importance](docs/images/feature_importance.png)
 
 ## Contributing
 
