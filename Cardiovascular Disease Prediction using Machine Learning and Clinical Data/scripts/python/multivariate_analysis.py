@@ -17,9 +17,17 @@ warnings.filterwarnings('ignore')
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (12, 6)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "Cardiovascular_Disease_Dataset.csv"
+RESULTS = ROOT / "results"
+RESULTS.mkdir(parents=True, exist_ok=True)
+
 def load_data():
     """Load the dataset"""
-    df = pd.read_csv('../../data/Cardiovascular_Disease_Dataset.csv')
+    df = pd.read_csv(DATA)
     return df
 
 def pca_analysis(df):
@@ -57,7 +65,7 @@ def pca_analysis(df):
     plt.ylabel(f'PC2 ({explained_variance[1]*100:.2f}% variance)')
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig('../../results/pca_analysis.png')
+    plt.savefig(RESULTS / 'pca_analysis.png')
     plt.close()
     
     print(f"\nFirst two principal components explain {cumulative_variance[1]*100:.2f}% of variance")
@@ -92,7 +100,7 @@ def feature_importance(df):
     plt.gca().invert_yaxis()
     plt.grid(True, alpha=0.3, axis='x')
     plt.tight_layout()
-    plt.savefig('../../results/feature_importance.png')
+    plt.savefig(RESULTS / 'feature_importance.png')
     plt.close()
 
 def multivariate_correlation(df):
@@ -105,7 +113,7 @@ def multivariate_correlation(df):
                 square=True, linewidths=1)
     plt.title('Multivariate Correlation Matrix (Including Target)')
     plt.tight_layout()
-    plt.savefig('../../results/multivariate_correlation.png')
+    plt.savefig(RESULTS / 'multivariate_correlation.png')
     plt.close()
 
 def main():

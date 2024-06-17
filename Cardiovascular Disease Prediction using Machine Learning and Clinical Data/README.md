@@ -293,6 +293,31 @@ mkdir -p results
 - **Notebooks**: Display plots inline and can export to HTML/PDF
 - **ML Models**: Trained models are saved in the `models/` directory (if implemented)
 
+
+## Visualizations
+
+Showcase figures are stored in `docs/images/`:
+
+### class distribution
+
+![class distribution](docs/images/class_distribution.png)
+
+### model comparison
+
+![model comparison](docs/images/model_comparison.png)
+
+### roc curves
+
+![roc curves](docs/images/roc_curves.png)
+
+### confusion matrix
+
+![confusion matrix](docs/images/confusion_matrix.png)
+
+### feature importance
+
+![feature importance](docs/images/feature_importance.png)
+
 ## Contributing
 
 1. Fork the repository

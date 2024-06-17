@@ -18,9 +18,17 @@ warnings.filterwarnings('ignore')
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (12, 6)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "Cardiovascular_Disease_Dataset.csv"
+RESULTS = ROOT / "results"
+RESULTS.mkdir(parents=True, exist_ok=True)
+
 def load_data():
     """Load the dataset"""
-    df = pd.read_csv('../../data/Cardiovascular_Disease_Dataset.csv')
+    df = pd.read_csv(DATA)
     print("Dataset loaded successfully!")
     print(f"Shape: {df.shape}")
     return df
@@ -82,7 +90,7 @@ def exploratory_analysis(df):
     sns.heatmap(correlation_matrix, annot=True, fmt='.2f', cmap='coolwarm', center=0)
     plt.title('Correlation Matrix')
     plt.tight_layout()
-    plt.savefig('../../results/correlation_matrix.png')
+    plt.savefig(RESULTS / 'correlation_matrix.png')
     plt.close()
     
     print("\nCorrelation with Target:")

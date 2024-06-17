@@ -16,9 +16,17 @@ warnings.filterwarnings('ignore')
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (12, 6)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "Cardiovascular_Disease_Dataset.csv"
+RESULTS = ROOT / "results"
+RESULTS.mkdir(parents=True, exist_ok=True)
+
 def load_data():
     """Load the dataset"""
-    df = pd.read_csv('../../data/Cardiovascular_Disease_Dataset.csv')
+    df = pd.read_csv(DATA)
     return df
 
 def univariate_numerical(df):
@@ -83,7 +91,7 @@ def visualize_distributions(df):
             axes[idx, 1].set_ylabel(col)
     
     plt.tight_layout()
-    plt.savefig('../../results/univariate_analysis.png')
+    plt.savefig(RESULTS / 'univariate_analysis.png')
     plt.close()
 
 def main():
