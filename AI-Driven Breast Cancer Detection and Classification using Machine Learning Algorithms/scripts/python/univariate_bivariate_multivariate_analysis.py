@@ -15,15 +15,23 @@ import os
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (12, 6)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "breast_cancer.csv"
+RESULTS = ROOT / "results"
+RESULTS.mkdir(parents=True, exist_ok=True)
+
 def load_data():
     """Load the breast cancer dataset"""
-    df = pd.read_csv('../../data/breast_cancer.csv')
+    df = pd.read_csv(DATA)
     return df
 
 def univariate_analysis(df, numerical_cols):
     """Perform univariate analysis"""
     print("=== UNIVARIATE ANALYSIS ===")
-    os.makedirs('../../results/univariate', exist_ok=True)
+    (RESULTS / 'univariate').mkdir(parents=True, exist_ok=True)
     
     # Select key features for analysis
     key_features = ['radius_mean', 'texture_mean', 'perimeter_mean', 
@@ -48,7 +56,7 @@ def univariate_analysis(df, numerical_cols):
     plt.suptitle('Univariate Analysis: Feature Distributions', 
                  fontsize=16, fontweight='bold', y=1.02)
     plt.tight_layout()
-    plt.savefig('../../results/univariate/distributions.png', dpi=300, bbox_inches='tight')
+    plt.savefig(RESULTS / 'univariate' / 'distributions.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Box plots
@@ -63,7 +71,7 @@ def univariate_analysis(df, numerical_cols):
     plt.suptitle('Univariate Analysis: Box Plots', 
                  fontsize=16, fontweight='bold', y=1.02)
     plt.tight_layout()
-    plt.savefig('../../results/univariate/boxplots.png', dpi=300, bbox_inches='tight')
+    plt.savefig(RESULTS / 'univariate' / 'boxplots.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Statistical summary
@@ -84,7 +92,7 @@ def univariate_analysis(df, numerical_cols):
 def bivariate_analysis(df, numerical_cols):
     """Perform bivariate analysis"""
     print("\n=== BIVARIATE ANALYSIS ===")
-    os.makedirs('../../results/bivariate', exist_ok=True)
+    (RESULTS / 'bivariate').mkdir(parents=True, exist_ok=True)
     
     # Correlation analysis
     correlation_matrix = df[numerical_cols].corr()
@@ -124,7 +132,7 @@ def bivariate_analysis(df, numerical_cols):
     plt.suptitle('Bivariate Analysis: Scatter Plots', 
                  fontsize=16, fontweight='bold', y=1.02)
     plt.tight_layout()
-    plt.savefig('../../results/bivariate/scatter_plots.png', dpi=300, bbox_inches='tight')
+    plt.savefig(RESULTS / 'bivariate' / 'scatter_plots.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Correlation heatmap for key features
@@ -135,7 +143,7 @@ def bivariate_analysis(df, numerical_cols):
     plt.title('Bivariate Analysis: Correlation Heatmap of Key Features', 
               fontsize=14, fontweight='bold', pad=20)
     plt.tight_layout()
-    plt.savefig('../../results/bivariate/correlation_heatmap.png', dpi=300, bbox_inches='tight')
+    plt.savefig(RESULTS / 'bivariate' / 'correlation_heatmap.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Feature vs Diagnosis analysis
@@ -160,7 +168,7 @@ def bivariate_analysis(df, numerical_cols):
     plt.suptitle('Bivariate Analysis: Features by Diagnosis', 
                  fontsize=16, fontweight='bold', y=1.02)
     plt.tight_layout()
-    plt.savefig('../../results/bivariate/features_by_diagnosis.png', 
+    plt.savefig(RESULTS / 'bivariate' / 'features_by_diagnosis.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
     
@@ -169,7 +177,7 @@ def bivariate_analysis(df, numerical_cols):
 def multivariate_analysis(df, numerical_cols):
     """Perform multivariate analysis"""
     print("\n=== MULTIVARIATE ANALYSIS ===")
-    os.makedirs('../../results/multivariate', exist_ok=True)
+    (RESULTS / 'multivariate').mkdir(parents=True, exist_ok=True)
     
     # Principal Component Analysis (PCA)
     from sklearn.decomposition import PCA
@@ -209,7 +217,7 @@ def multivariate_analysis(df, numerical_cols):
     axes[1].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('../../results/multivariate/pca_analysis.png', 
+    plt.savefig(RESULTS / 'multivariate' / 'pca_analysis.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
     
@@ -236,7 +244,7 @@ def multivariate_analysis(df, numerical_cols):
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig('../../results/multivariate/pca_biplot.png', 
+    plt.savefig(RESULTS / 'multivariate' / 'pca_biplot.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
     
@@ -266,7 +274,7 @@ def multivariate_analysis(df, numerical_cols):
     plt.title('Multivariate Analysis: Correlation Matrix of Key Features', 
               fontsize=16, fontweight='bold', pad=20)
     plt.tight_layout()
-    plt.savefig('../../results/multivariate/correlation_matrix.png', 
+    plt.savefig(RESULTS / 'multivariate' / 'correlation_matrix.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
     
@@ -279,7 +287,7 @@ def multivariate_analysis(df, numerical_cols):
                             plot_kws={'alpha': 0.6, 's': 20})
     pair_plot.fig.suptitle('Multivariate Analysis: Pair Plot of Key Features', 
                           fontsize=14, fontweight='bold', y=1.02)
-    plt.savefig('../../results/multivariate/pair_plot.png', 
+    plt.savefig(RESULTS / 'multivariate' / 'pair_plot.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
     

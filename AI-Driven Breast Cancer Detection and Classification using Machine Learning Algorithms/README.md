@@ -259,6 +259,31 @@ All analysis results, including visualizations and model outputs, are saved in t
 
 5. **Feature Importance**: Certain features (e.g., radius_mean, perimeter_mean, area_mean) show high importance in classification.
 
+
+## Visualizations
+
+Showcase figures are stored in `docs/images/`:
+
+### class distribution
+
+![class distribution](docs/images/class_distribution.png)
+
+### model comparison
+
+![model comparison](docs/images/model_comparison.png)
+
+### roc curves
+
+![roc curves](docs/images/roc_curves.png)
+
+### confusion matrix
+
+![confusion matrix](docs/images/confusion_matrix.png)
+
+### feature importance
+
+![feature importance](docs/images/feature_importance.png)
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

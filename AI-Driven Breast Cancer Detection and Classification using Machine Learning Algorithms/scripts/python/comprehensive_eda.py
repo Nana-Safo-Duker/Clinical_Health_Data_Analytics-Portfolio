@@ -16,9 +16,17 @@ warnings.filterwarnings('ignore')
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (12, 6)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "breast_cancer.csv"
+RESULTS = ROOT / "results"
+RESULTS.mkdir(parents=True, exist_ok=True)
+
 def load_data():
     """Load the breast cancer dataset"""
-    df = pd.read_csv('../../data/breast_cancer.csv')
+    df = pd.read_csv(DATA)
     return df
 
 def data_overview(df):
@@ -79,7 +87,7 @@ def target_variable_analysis(df):
         print(f"  {diagnosis}: {diagnosis_counts[diagnosis]} ({diagnosis_props[diagnosis]:.2f}%)")
     
     # Visualization
-    os.makedirs('../../results/eda', exist_ok=True)
+    (RESULTS / 'eda').mkdir(parents=True, exist_ok=True)
     
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     
@@ -95,7 +103,7 @@ def target_variable_analysis(df):
     axes[1].set_ylabel('')
     
     plt.tight_layout()
-    plt.savefig('../../results/eda/target_distribution.png', dpi=300, bbox_inches='tight')
+    plt.savefig(RESULTS / 'eda' / 'target_distribution.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     return diagnosis_counts, diagnosis_props
@@ -147,7 +155,7 @@ def feature_analysis(df, numerical_cols):
     plt.suptitle('Feature Distributions by Diagnosis', 
                  fontsize=16, fontweight='bold', y=1.02)
     plt.tight_layout()
-    plt.savefig('../../results/eda/feature_distributions.png', dpi=300, bbox_inches='tight')
+    plt.savefig(RESULTS / 'eda' / 'feature_distributions.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Box plots
@@ -163,7 +171,7 @@ def feature_analysis(df, numerical_cols):
     plt.suptitle('Box Plots: Features by Diagnosis', 
                  fontsize=16, fontweight='bold', y=1.02)
     plt.tight_layout()
-    plt.savefig('../../results/eda/boxplots_by_diagnosis.png', 
+    plt.savefig(RESULTS / 'eda' / 'boxplots_by_diagnosis.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
     
@@ -184,7 +192,7 @@ def correlation_analysis(df, numerical_cols):
     plt.title('Correlation Matrix of All Numerical Features', 
               fontsize=16, fontweight='bold', pad=20)
     plt.tight_layout()
-    plt.savefig('../../results/eda/correlation_matrix_full.png', 
+    plt.savefig(RESULTS / 'eda' / 'correlation_matrix_full.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
     
@@ -224,7 +232,7 @@ def correlation_analysis(df, numerical_cols):
               fontsize=14, fontweight='bold')
     plt.xlabel('Correlation Coefficient')
     plt.tight_layout()
-    plt.savefig('../../results/eda/target_correlation.png', 
+    plt.savefig(RESULTS / 'eda' / 'target_correlation.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
     

@@ -12,8 +12,7 @@ from sklearn.model_selection import train_test_split, cross_val_score, Stratifie
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
                             f1_score, confusion_matrix, classification_report,
-                            roc_auc_score, roc_curve, precision_recall_curve,
-                            plot_confusion_matrix)
+                            roc_auc_score, roc_curve, precision_recall_curve)
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, VotingClassifier
@@ -26,6 +25,14 @@ import os
 import warnings
 warnings.filterwarnings('ignore')
 
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "breast_cancer.csv"
+RESULTS = ROOT / "results"
+ML_RESULTS = RESULTS / "ml"
+ML_RESULTS.mkdir(parents=True, exist_ok=True)
+
 # Set style
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (12, 6)
@@ -33,7 +40,7 @@ plt.rcParams['figure.figsize'] = (12, 6)
 def load_and_prepare_data():
     """Load and prepare the data for machine learning"""
     # Load data
-    df = pd.read_csv('../../data/breast_cancer.csv')
+    df = pd.read_csv(DATA)
     
     # Separate features and target
     X = df.drop(['id', 'diagnosis'], axis=1)
@@ -162,8 +169,6 @@ def compare_models(X_train_scaled, X_test_scaled, y_train, y_test):
     print(comparison_df.to_string(index=False))
     
     # Visualization
-    os.makedirs('../../results/ml', exist_ok=True)
-    
     # Accuracy comparison
     plt.figure(figsize=(12, 8))
     comparison_df_sorted = comparison_df.sort_values('Test Accuracy', ascending=True)
@@ -172,7 +177,7 @@ def compare_models(X_train_scaled, X_test_scaled, y_train, y_test):
     plt.title('Model Comparison: Test Accuracy', fontsize=14, fontweight='bold')
     plt.xlim([0.9, 1.0])
     plt.tight_layout()
-    plt.savefig('../../results/ml/model_comparison_accuracy.png', dpi=300, bbox_inches='tight')
+    plt.savefig(ML_RESULTS / 'model_comparison_accuracy.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Metrics comparison
@@ -191,7 +196,7 @@ def compare_models(X_train_scaled, X_test_scaled, y_train, y_test):
     
     plt.suptitle('Model Comparison: All Metrics', fontsize=16, fontweight='bold', y=1.02)
     plt.tight_layout()
-    plt.savefig('../../results/ml/model_comparison_all_metrics.png', dpi=300, bbox_inches='tight')
+    plt.savefig(ML_RESULTS / 'model_comparison_all_metrics.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     return results_dict, trained_models, comparison_df
@@ -219,7 +224,7 @@ def detailed_model_analysis(best_model_name, best_model, X_test_scaled, y_test, 
     plt.ylabel('True Label')
     plt.xlabel('Predicted Label')
     plt.tight_layout()
-    plt.savefig(f'../../results/ml/confusion_matrix_{best_model_name.replace(" ", "_")}.png', 
+    plt.savefig(ML_RESULTS / f'confusion_matrix_{best_model_name.replace(" ", "_")}.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
     
@@ -235,7 +240,7 @@ def detailed_model_analysis(best_model_name, best_model, X_test_scaled, y_test, 
         plt.legend()
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
-        plt.savefig(f'../../results/ml/roc_curve_{best_model_name.replace(" ", "_")}.png', 
+        plt.savefig(ML_RESULTS / f'roc_curve_{best_model_name.replace(" ", "_")}.png', 
                     dpi=300, bbox_inches='tight')
         plt.close()
         
@@ -248,7 +253,7 @@ def detailed_model_analysis(best_model_name, best_model, X_test_scaled, y_test, 
         plt.title(f'Precision-Recall Curve: {best_model_name}', fontsize=14, fontweight='bold')
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
-        plt.savefig(f'../../results/ml/pr_curve_{best_model_name.replace(" ", "_")}.png', 
+        plt.savefig(ML_RESULTS / f'pr_curve_{best_model_name.replace(" ", "_")}.png', 
                     dpi=300, bbox_inches='tight')
         plt.close()
     
@@ -266,7 +271,7 @@ def detailed_model_analysis(best_model_name, best_model, X_test_scaled, y_test, 
         plt.title(f'Top 15 Feature Importances: {best_model_name}', 
                  fontsize=14, fontweight='bold')
         plt.tight_layout()
-        plt.savefig(f'../../results/ml/feature_importance_{best_model_name.replace(" ", "_")}.png', 
+        plt.savefig(ML_RESULTS / f'feature_importance_{best_model_name.replace(" ", "_")}.png', 
                     dpi=300, bbox_inches='tight')
         plt.close()
         
@@ -360,7 +365,7 @@ def main():
     print(f"XGBoost (Tuned) - Test Accuracy: {xgb_tuned_results['test_accuracy']:.4f}")
     
     # Save results
-    comparison_df.to_csv('../../results/ml/model_comparison.csv', index=False)
+    comparison_df.to_csv(ML_RESULTS / 'model_comparison.csv', index=False)
     
     print("\n" + "=" * 80)
     print("ML ANALYSIS COMPLETE")
