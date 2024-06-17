@@ -258,3 +258,4 @@ For questions or issues, please open an issue in the repository.
 
 - **v1.0.0** (2024): Initial release with comprehensive analysis in Python and R
 
+**Last Updated**: June 2024
