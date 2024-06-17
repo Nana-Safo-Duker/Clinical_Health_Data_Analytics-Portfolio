@@ -15,9 +15,17 @@ warnings.filterwarnings('ignore')
 sns.set_style('whitegrid')
 plt.rcParams['figure.figsize'] = (14, 8)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "data" / "health_data.csv"
+FIGURES = ROOT / "figures"
+FIGURES.mkdir(parents=True, exist_ok=True)
+
 def load_and_clean_data():
     """Load and clean the health data"""
-    df = pd.read_csv('../data/health_data.csv')
+    df = pd.read_csv(DATA)
     if 'Unnamed: 0' in df.columns:
         df = df.drop('Unnamed: 0', axis=1)
     df['age_years'] = df['age'] / 365.25
@@ -50,7 +58,7 @@ def univariate_analysis(df):
         axes[i].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('../figures/univariate_numerical.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'univariate_numerical.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Categorical variables
@@ -67,7 +75,7 @@ def univariate_analysis(df):
         axes[i].grid(True, alpha=0.3, axis='y')
     
     plt.tight_layout()
-    plt.savefig('../figures/univariate_categorical.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'univariate_categorical.png', dpi=300, bbox_inches='tight')
     plt.close()
     print("Univariate analysis completed. Figures saved.")
 
@@ -95,7 +103,7 @@ def bivariate_analysis(df):
                     bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     
     plt.tight_layout()
-    plt.savefig('../figures/bivariate_scatter.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'bivariate_scatter.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Box plots
@@ -113,7 +121,7 @@ def bivariate_analysis(df):
         axes[i].grid(True, alpha=0.3, axis='y')
     
     plt.tight_layout()
-    plt.savefig('../figures/bivariate_boxplots.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'bivariate_boxplots.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Heatmaps
@@ -129,7 +137,7 @@ def bivariate_analysis(df):
         axes[i].set_ylabel(var)
     
     plt.tight_layout()
-    plt.savefig('../figures/bivariate_heatmaps.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'bivariate_heatmaps.png', dpi=300, bbox_inches='tight')
     plt.close()
     print("Bivariate analysis completed. Figures saved.")
 
@@ -148,7 +156,7 @@ def multivariate_analysis(df):
                 square=True, linewidths=1, cbar_kws={'shrink': 0.8}, fmt='.3f')
     plt.title('Multivariate Correlation Matrix', fontsize=14, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('../figures/multivariate_correlation.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'multivariate_correlation.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Pair plot
@@ -158,7 +166,7 @@ def multivariate_analysis(df):
     sns.pairplot(pair_df, hue='cardio', diag_kind='kde', palette=['skyblue', 'salmon'])
     plt.suptitle('Pair Plot: Key Variables by Cardio Status', y=1.02, fontsize=14, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('../figures/multivariate_pairplot.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'multivariate_pairplot.png', dpi=300, bbox_inches='tight')
     plt.close()
     print("Multivariate analysis completed. Figures saved.")
 

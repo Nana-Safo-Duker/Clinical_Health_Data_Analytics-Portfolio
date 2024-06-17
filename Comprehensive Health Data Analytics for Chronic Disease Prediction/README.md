@@ -241,6 +241,35 @@ All generated figures and results are saved in the `figures/` and `results/` dir
 - GGally
 - moments
 
+
+## Visualizations
+
+Showcase figures are stored in `docs/images/`:
+
+### class distribution
+
+![class distribution](docs/images/class_distribution.png)
+
+### model comparison
+
+![model comparison](docs/images/model_comparison.png)
+
+### roc curves
+
+![roc curves](docs/images/roc_curves.png)
+
+### confusion matrix
+
+![confusion matrix](docs/images/confusion_matrix.png)
+
+### feature importance
+
+![feature importance](docs/images/feature_importance.png)
+
+### correlation heatmap
+
+![correlation heatmap](docs/images/correlation_heatmap.png)
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

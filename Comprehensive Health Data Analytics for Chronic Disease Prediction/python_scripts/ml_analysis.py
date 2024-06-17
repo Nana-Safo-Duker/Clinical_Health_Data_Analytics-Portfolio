@@ -21,9 +21,17 @@ warnings.filterwarnings('ignore')
 sns.set_style('whitegrid')
 plt.rcParams['figure.figsize'] = (14, 8)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "data" / "health_data.csv"
+FIGURES = ROOT / "figures"
+FIGURES.mkdir(parents=True, exist_ok=True)
+
 def load_and_prepare_data():
     """Load and prepare data for machine learning"""
-    df = pd.read_csv('../data/health_data.csv')
+    df = pd.read_csv(DATA)
     if 'Unnamed: 0' in df.columns:
         df = df.drop('Unnamed: 0', axis=1)
     
@@ -130,7 +138,7 @@ def evaluate_models(results, y_test):
     plt.legend(loc='lower right', fontsize=10)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig('../figures/roc_curves.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'roc_curves.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Confusion matrices
@@ -145,7 +153,7 @@ def evaluate_models(results, y_test):
         axes[i].set_ylabel('Actual')
     
     plt.tight_layout()
-    plt.savefig('../figures/confusion_matrices.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'confusion_matrices.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Model comparison
@@ -172,7 +180,7 @@ def evaluate_models(results, y_test):
         plt.text(v + 0.01, i, f'{v:.4f}', va='center', fontweight='bold')
     plt.grid(True, alpha=0.3, axis='x')
     plt.tight_layout()
-    plt.savefig('../figures/model_comparison.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'model_comparison.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def feature_importance_analysis(results, feature_cols, X_train):
@@ -201,7 +209,7 @@ def feature_importance_analysis(results, feature_cols, X_train):
                 axes[i].grid(True, alpha=0.3, axis='x')
     
     plt.tight_layout()
-    plt.savefig('../figures/feature_importance.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'feature_importance.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def hyperparameter_tuning(X_train, y_train):

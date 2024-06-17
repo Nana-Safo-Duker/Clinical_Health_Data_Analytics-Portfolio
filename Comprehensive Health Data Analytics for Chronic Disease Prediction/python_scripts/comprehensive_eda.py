@@ -15,9 +15,17 @@ warnings.filterwarnings('ignore')
 sns.set_style('whitegrid')
 plt.rcParams['figure.figsize'] = (14, 8)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "data" / "health_data.csv"
+FIGURES = ROOT / "figures"
+FIGURES.mkdir(parents=True, exist_ok=True)
+
 def load_and_clean_data():
     """Load and clean the health data"""
-    df = pd.read_csv('../data/health_data.csv')
+    df = pd.read_csv(DATA)
     if 'Unnamed: 0' in df.columns:
         df = df.drop('Unnamed: 0', axis=1)
     df['age_years'] = df['age'] / 365.25
@@ -50,7 +58,7 @@ def data_overview(df):
         msno.matrix(df)
         plt.title('Missing Data Pattern', fontsize=14, fontweight='bold')
         plt.tight_layout()
-        plt.savefig('../figures/missing_data.png', dpi=300, bbox_inches='tight')
+        plt.savefig(FIGURES / 'missing_data.png', dpi=300, bbox_inches='tight')
         plt.close()
 
 def outlier_analysis(df):
@@ -82,7 +90,7 @@ def outlier_analysis(df):
         axes[i].grid(True, alpha=0.3, axis='y')
     
     plt.tight_layout()
-    plt.savefig('../figures/outlier_analysis.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'outlier_analysis.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def distribution_analysis(df):
@@ -118,7 +126,7 @@ def distribution_analysis(df):
         axes[i].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('../figures/distribution_analysis.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'distribution_analysis.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def relationship_analysis(df):
@@ -136,7 +144,7 @@ def relationship_analysis(df):
                 square=True, linewidths=1, cbar_kws={'shrink': 0.8}, fmt='.3f')
     plt.title('Correlation Matrix', fontsize=14, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('../figures/relationship_correlation.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'relationship_correlation.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Relationship with target variable
@@ -162,7 +170,7 @@ def target_variable_analysis(df):
         plt.text(i, v + 500, f'{v}\n({v/len(df)*100:.2f}%)', ha='center', va='bottom', fontweight='bold')
     plt.grid(True, alpha=0.3, axis='y')
     plt.tight_layout()
-    plt.savefig('../figures/target_distribution.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'target_distribution.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Comparison by target variable
@@ -179,7 +187,7 @@ def target_variable_analysis(df):
     
     plt.suptitle('')
     plt.tight_layout()
-    plt.savefig('../figures/target_comparison.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'target_comparison.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def feature_engineering_insights(df):

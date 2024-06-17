@@ -16,9 +16,17 @@ warnings.filterwarnings('ignore')
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (12, 6)
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "data" / "health_data.csv"
+FIGURES = ROOT / "figures"
+FIGURES.mkdir(parents=True, exist_ok=True)
+
 def load_and_clean_data():
     """Load and clean the health data"""
-    df = pd.read_csv('../data/health_data.csv')
+    df = pd.read_csv(DATA)
     if 'Unnamed: 0' in df.columns:
         df = df.drop('Unnamed: 0', axis=1)
     
@@ -123,7 +131,7 @@ def correlation_analysis(df):
                 square=True, linewidths=1, cbar_kws={"shrink": 0.8})
     plt.title('Correlation Matrix of Numerical Variables', fontsize=14, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('../figures/correlation_matrix.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'correlation_matrix.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def exploratory_analysis(df):
@@ -143,7 +151,7 @@ def exploratory_analysis(df):
     for i, v in enumerate(cardio_counts.values):
         plt.text(i, v + 500, str(v), ha='center', va='bottom', fontweight='bold')
     plt.tight_layout()
-    plt.savefig('../figures/cardio_distribution.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'cardio_distribution.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Distribution of numerical variables
@@ -159,7 +167,7 @@ def exploratory_analysis(df):
         axes[i].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('../figures/numerical_distributions.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'numerical_distributions.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Box plots by cardio status
@@ -175,7 +183,7 @@ def exploratory_analysis(df):
     
     plt.suptitle('', fontsize=16)
     plt.tight_layout()
-    plt.savefig('../figures/boxplots_by_cardio.png', dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES / 'boxplots_by_cardio.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     print("Exploratory analysis completed. Figures saved.")
