@@ -324,3 +324,29 @@ For questions or suggestions, please open an issue on the repository.
 **Note**: This project is for educational and research purposes. Always consult healthcare professionals for medical advice and diagnosis.
 
 **Last Updated**: June 2024
+
+
+## Visualizations
+
+Showcase figures are stored in `docs/images/`:
+
+### class distribution
+
+![class distribution](docs/images/class_distribution.png)
+
+### model comparison
+
+![model comparison](docs/images/model_comparison.png)
+
+### roc curves
+
+![roc curves](docs/images/roc_curves.png)
+
+### confusion matrix
+
+![confusion matrix](docs/images/confusion_matrix.png)
+
+### feature importance
+
+![feature importance](docs/images/feature_importance.png)
+
