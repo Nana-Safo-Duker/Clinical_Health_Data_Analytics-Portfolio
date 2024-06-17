@@ -13,6 +13,14 @@ from scipy.stats import chi2_contingency
 import warnings
 warnings.filterwarnings('ignore')
 
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "mock_treatment_starts_2016.csv"
+RESULTS = ROOT / "results"
+RESULTS.mkdir(parents=True, exist_ok=True)
+
 def load_and_preprocess_data(file_path):
     """Load and preprocess the dataset."""
     df = pd.read_csv(file_path)
@@ -183,11 +191,11 @@ def main():
     import os
     
     # Create output directory
-    output_dir = 'outputs'
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir = str(RESULTS)
+    RESULTS.mkdir(parents=True, exist_ok=True)
     
     # Load data
-    file_path = '../../data/mock_treatment_starts_2016.csv'
+    file_path = DATA
     df = load_and_preprocess_data(file_path)
     
     # Perform analyses

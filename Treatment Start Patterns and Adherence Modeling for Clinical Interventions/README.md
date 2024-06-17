@@ -205,6 +205,19 @@ If this dataset is based on or derived from a real clinical dataset, please refe
 3. **No Medical Advice**: This analysis is for educational purposes and should not be used for medical decision-making
 4. **Attribution**: If publishing results, please acknowledge the data source
 
+
+## Visualizations
+
+Showcase figures are stored in `docs/images/`:
+
+### treatment patterns
+
+![treatment patterns](docs/images/treatment_patterns.png)
+
+### starts by month
+
+![starts by month](docs/images/starts_by_month.png)
+
 ## Contributing
 
 This is an educational project. Contributions, suggestions, and improvements are welcome!
