@@ -87,3 +87,4 @@ Please refer to the README.md for license information.
 
 For questions or issues, please open an issue on the GitHub repository.
 
+**Last Updated**: June 2024

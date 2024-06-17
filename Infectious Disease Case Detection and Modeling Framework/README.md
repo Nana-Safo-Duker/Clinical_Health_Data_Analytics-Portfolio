@@ -200,5 +200,5 @@ For questions or issues, please open an issue on the GitHub repository.
 
 ---
 
-**Last Updated:** November 2025
+**Last Updated:** June 2024
 
