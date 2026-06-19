@@ -28,6 +28,7 @@ Comprehensive collection of 8 clinical data science and health analytics project
 - [Repository Structure](#repository-structure)
 - [Getting Started](#getting-started)
 - [Project Details](#project-details)
+- [Visualization Gallery](#visualization-gallery)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
@@ -142,7 +143,7 @@ This repository contains a collection of **8 comprehensive clinical data science
 
 ### 7. Predicting Type 2 Diabetes Risk from Behavioral and Health Indicator
 
-**Description**: Implemented a predictive model for Type 2 Diabetes risk assessment using behavioral and health indicators from the Behavioral Risk Factor Surveillance System (BRFSS) 2021. The analysis includes 236,380 records with 22 features covering demographics, health behaviors, and medical history.
+**Description**: Implemented a predictive model for Type 2 Diabetes risk assessment using behavioral and health indicators from the Behavioral Risk Factor Surveillance System (BRFSS) 2021. The analysis includes 236,378 records with 22 features covering demographics, health behaviors, and medical history.
 
 **Key Features**:
 - Large-scale behavioral health analysis
@@ -150,7 +151,7 @@ This repository contains a collection of **8 comprehensive clinical data science
 - Population health insights
 - BRFSS 2021 dataset analysis
 
-**Dataset**: Diabetes Binary Health Indicators - BRFSS 2021 (236,380 records, 22 features)
+**Dataset**: Diabetes Binary Health Indicators - BRFSS 2021 (236,378 records, 22 features)
 
 ---
 
@@ -201,23 +202,23 @@ This repository contains a collection of **8 comprehensive clinical data science
 ## 📁 Repository Structure
 
 ```
-Clinical-Data-Science-Health-Analytics/
+Clinical_Health_Data_Analytics-Portfolio/
 │
 ├── AI-Driven Breast Cancer Detection and Classification using Machine Learning Algorithms/
 │   ├── data/
 │   ├── notebooks/ (python/ & r/)
 │   ├── scripts/ (python/ & r/)
 │   ├── results/
-│   ├── models/
-│   ├── docs/
+│   ├── docs/images/          (showcase figures for README)
+│   ├── verify_setup.py
+│   ├── SETUP.md
 │   └── README.md
 │
 ├── Cardiovascular Disease Prediction using Machine Learning and Clinical Data/
 │   ├── data/
 │   ├── notebooks/ (python/ & r/)
 │   ├── scripts/ (python/ & r/)
-│   ├── results/
-│   ├── models/
+│   ├── docs/images/
 │   └── README.md
 │
 ├── Comprehensive Health Data Analytics for Chronic Disease Prediction/
@@ -226,7 +227,7 @@ Clinical-Data-Science-Health-Analytics/
 │   ├── python_scripts/
 │   ├── r_notebooks/
 │   ├── r_scripts/
-│   ├── results/
+│   ├── docs/images/
 │   └── README.md
 │
 ├── Heart Disease Risk Stratification through Data-Driven Predictive Analytics/
@@ -234,12 +235,14 @@ Clinical-Data-Science-Health-Analytics/
 │   ├── notebooks/ (python/ & r/)
 │   ├── scripts/ (python/ & r/)
 │   ├── results/
+│   ├── docs/images/
 │   └── README.md
 │
 ├── Infectious Disease Case Detection and Modeling Framework/
 │   ├── data/
 │   ├── notebooks/ (python/ & r/)
 │   ├── scripts/ (python/ & r/)
+│   ├── docs/images/
 │   └── README.md
 │
 ├── Pima Indians Diabetes Prediction - A Comparative Machine Learning Approach/
@@ -247,20 +250,21 @@ Clinical-Data-Science-Health-Analytics/
 │   ├── notebooks/ (python/ & r/)
 │   ├── scripts/ (python/ & r/)
 │   ├── outputs/
+│   ├── docs/images/
 │   └── README.md
 │
 ├── Predicting Type 2 Diabetes Risk from Behavioral and Health Indicator/
 │   ├── data/
 │   ├── notebooks/ (python/ & r/)
 │   ├── scripts/ (python/ & r/)
-│   ├── results/
+│   ├── docs/images/
 │   └── README.md
 │
 └── Treatment Start Patterns and Adherence Modeling for Clinical Interventions/
     ├── data/
     ├── notebooks/ (python/ & r/)
     ├── scripts/ (python/ & r/)
-    ├── docs/
+    ├── docs/images/
     └── README.md
 ```
 
@@ -280,8 +284,8 @@ Clinical-Data-Science-Health-Analytics/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Nana-Safo-Duker/Clinical-Data-Science-Health-Analytics.git
-   cd Clinical-Data-Science-Health-Analytics
+   git clone https://github.com/Nana-Safo-Duker/Clinical_Health_Data_Analytics-Portfolio.git
+   cd Clinical_Health_Data_Analytics-Portfolio
    ```
 
 2. **Set up Python environment**:
@@ -341,6 +345,81 @@ Each project follows a consistent analysis workflow:
    - Hyperparameter tuning
    - Performance metrics
    - Model comparison
+
+---
+
+## 📸 Visualization Gallery
+
+Each project ships showcase figures under `docs/images/` (committed for GitHub rendering). Full run outputs also land in that project's `results/` folder where applicable.
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 1. Breast Cancer Detection
+
+[![Breast cancer ROC curves](AI-Driven%20Breast%20Cancer%20Detection%20and%20Classification%20using%20Machine%20Learning%20Algorithms/docs/images/roc_curves.png)](AI-Driven%20Breast%20Cancer%20Detection%20and%20Classification%20using%20Machine%20Learning%20Algorithms/README.md#visualizations)
+
+</td>
+<td width="50%" valign="top">
+
+### 2. Cardiovascular Disease Prediction
+
+[![Cardiovascular model comparison](Cardiovascular%20Disease%20Prediction%20using%20Machine%20Learning%20and%20Clinical%20Data/docs/images/model_comparison.png)](Cardiovascular%20Disease%20Prediction%20using%20Machine%20Learning%20and%20Clinical%20Data/README.md#visualizations)
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 3. Chronic Disease Analytics
+
+[![Chronic disease correlation heatmap](Comprehensive%20Health%20Data%20Analytics%20for%20Chronic%20Disease%20Prediction/docs/images/correlation_heatmap.png)](Comprehensive%20Health%20Data%20Analytics%20for%20Chronic%20Disease%20Prediction/README.md#visualizations)
+
+</td>
+<td width="50%" valign="top">
+
+### 4. Heart Disease Risk Stratification
+
+[![Heart disease feature importance](Heart%20Disease%20Risk%20Stratification%20through%20Data-Driven%20Predictive%20Analytics/docs/images/feature_importance.png)](Heart%20Disease%20Risk%20Stratification%20through%20Data-Driven%20Predictive%20Analytics/README.md#visualizations)
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 5. Infectious Disease Modeling
+
+[![Infectious disease incidence distribution](Infectious%20Disease%20Case%20Detection%20and%20Modeling%20Framework/docs/images/incidence_distribution.png)](Infectious%20Disease%20Case%20Detection%20and%20Modeling%20Framework/README.md#visualizations)
+
+</td>
+<td width="50%" valign="top">
+
+### 6. Pima Indians Diabetes Prediction
+
+[![Pima diabetes model comparison](Pima%20Indians%20Diabetes%20Prediction%20-%20A%20Comparative%20Machine%20Learning%20Approach/docs/images/model_comparison.png)](Pima%20Indians%20Diabetes%20Prediction%20-%20A%20Comparative%20Machine%20Learning%20Approach/README.md#visualizations)
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 7. Type 2 Diabetes Risk (BRFSS)
+
+[![Type 2 diabetes ROC curves](Predicting%20Type%202%20Diabetes%20Risk%20from%20Behavioral%20and%20Health%20Indicator/docs/images/roc_curves.png)](Predicting%20Type%202%20Diabetes%20Risk%20from%20Behavioral%20and%20Health%20Indicator/README.md#visualizations)
+
+</td>
+<td width="50%" valign="top">
+
+### 8. Treatment Adherence Modeling
+
+[![Treatment start patterns](Treatment%20Start%20Patterns%20and%20Adherence%20Modeling%20for%20Clinical%20Interventions/docs/images/treatment_patterns.png)](Treatment%20Start%20Patterns%20and%20Adherence%20Modeling%20for%20Clinical%20Interventions/README.md#visualizations)
+
+</td>
+</tr>
+</table>
+
+Open any project README for the full set of figures (EDA panels, confusion matrices, feature importance, model comparisons, and more).
 
 ---
 
@@ -420,4 +499,4 @@ Please refer to individual project README files for specific dataset citations a
 
 **Built with ❤️ for advancing clinical data science and health analytics**
 
-*Last updated: June 2024.****
+*Last updated: July 2026.*
